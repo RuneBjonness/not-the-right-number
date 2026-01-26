@@ -56,12 +56,14 @@ Tests are organized by category and difficulty progression:
 - Input as mathematical expression (e.g., "12+5")
 - Rules from early game and mid game - but this time each operand must satisfy individual tests (while the result of the expression must still satisfy the existing tests)
 
-### Key Components (planned)
+### Key Components
 
-- `NumberInput`: Main input field with validation feedback
-- `TestList`: Stacked list showing all active tests with pass/fail indicators (progressive reveal)
-- `TestEngine`: Core logic for evaluating numbers against tests and selecting new tests
-- `GameState`: Manages active tests, score, and game progression
+- `src/components/NumberInput.tsx`: Main input field with submit button
+- `src/components/TestList.tsx`: Stacked list showing all active tests with pass/fail indicators
+- `src/engine/gameEngine.ts`: Core logic for validating input and selecting new tests
+- `src/engine/tests.ts`: Test definitions organized by tier (EARLY, MID, LATE)
+- `src/engine/types.ts`: TypeScript types for Test, GameState, TestResult
+- `src/hooks/useGameState.ts`: Game state management hook
 
 ### Test Selection Strategy
 
@@ -73,15 +75,38 @@ When adding a new test, the engine must:
 
 ## Visual Theme
 
-The game uses a **classroom blackboard** inspired aesthetic:
+The game uses a **classroom blackboard** inspired aesthetic with realistic chalk text effects.
 
-- **Background:** Dark green/gray chalkboard texture
-- **Typography:** Hand-written, chalky white font (use a font like "Caveat", "Patrick Hand", or similar Google Fonts)
-- **Text color:** Off-white/cream chalk color, slightly rough edges
-- **Accents:** Chalk-like colors for pass/fail indicators (green chalk, red chalk)
-- **Input field:** Styled to look like writing on a chalkboard
-- **Overall feel:** Nostalgic, educational, slightly playful
+### Chalkboard Background
+- Dark green base color (`#2a3c2a`)
+- SVG fractal noise filter for grainy surface texture
+- Chalk dust smudges (horizontal swipes like eraser marks)
+- Vignette effect darkening the edges
 
-Font suggestions (Google Fonts):
-- Primary text: "Caveat" or "Patrick Hand"
-- Numbers/input: "Permanent Marker" or keep same as primary
+### Chalk Text Effects
+Implemented via SVG filters in `index.html`:
+
+- **`#chalk`** (body text, input, buttons): Grainy texture, softened edges, subtle dust halo
+- **`#chalk-strong`** (headers, score): Edge displacement for wobble, harsher grain, larger glow
+
+Chalk text characteristics replicated:
+- Grainy, dusty appearance (not solid color)
+- Soft/fuzzy edges with dust halo
+- Slight wobble/imperfection on large text
+- Off-white color (`#e8e8d8`)
+
+### CSS Classes
+- `.chalk-text` - Standard chalk effect for body text
+- `.chalk-text-strong` - Pronounced effect for headers
+- `.chalk-glow` - Extra glow for score/emphasis
+- `.chalk-input` - Large chalky input field
+- `.chalk-button` - Dashed border, chalk-filtered buttons
+
+### Typography
+- **Font:** "Indie Flower" (Google Fonts) - handwritten style
+- **Colors:**
+  - Chalk white: `#e8e8d8`
+  - Chalk green (pass): `#7cb987`
+  - Chalk red (fail): `#e07a7a`
+  - Chalk yellow (score): `#e8d174`
+  - Chalk blue (primary actions): `#7ab8d4`

@@ -4,8 +4,92 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Not The Right Number</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Indie+Flower&display=swap" rel="stylesheet">
   </head>
   <body>
+    <!-- SVG filters for chalkboard and chalk effects -->
+    <svg style="position: absolute; width: 0; height: 0;">
+      <defs>
+        <!-- Realistic chalk text effect -->
+        <filter id="chalk" x="-20%" y="-20%" width="140%" height="140%">
+          <!-- Create grainy noise texture -->
+          <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="4" seed="15" result="noise"/>
+
+          <!-- Make noise high contrast for chalk grain -->
+          <feComponentTransfer in="noise" result="crunchyNoise">
+            <feFuncR type="discrete" tableValues="0 0.3 0.6 1"/>
+            <feFuncG type="discrete" tableValues="0 0.3 0.6 1"/>
+            <feFuncB type="discrete" tableValues="0 0.3 0.6 1"/>
+          </feComponentTransfer>
+
+          <!-- Soften the text edges slightly -->
+          <feGaussianBlur in="SourceGraphic" stdDeviation="0.5" result="softText"/>
+
+          <!-- Create dust halo/glow around text -->
+          <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="glow"/>
+          <feComponentTransfer in="glow" result="fadedGlow">
+            <feFuncA type="linear" slope="0.3" intercept="0"/>
+          </feComponentTransfer>
+
+          <!-- Combine soft text with noise to create texture -->
+          <feComposite in="crunchyNoise" in2="softText" operator="in" result="texturedText"/>
+
+          <!-- Blend original with textured version for readable but chalky look -->
+          <feBlend in="softText" in2="texturedText" mode="multiply" result="chalkyText"/>
+
+          <!-- Layer: glow behind, chalky text on top -->
+          <feMerge>
+            <feMergeNode in="fadedGlow"/>
+            <feMergeNode in="chalkyText"/>
+          </feMerge>
+        </filter>
+
+        <!-- Stronger chalk effect for headers -->
+        <filter id="chalk-strong" x="-20%" y="-20%" width="140%" height="140%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.6" numOctaves="4" seed="5" result="noise"/>
+
+          <!-- Rougher edge displacement -->
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.5" xChannelSelector="R" yChannelSelector="G" result="wobbly"/>
+
+          <!-- Grainy texture -->
+          <feTurbulence type="fractalNoise" baseFrequency="1.2" numOctaves="3" seed="42" result="grain"/>
+          <feComponentTransfer in="grain" result="harshGrain">
+            <feFuncR type="discrete" tableValues="0 0.5 0.8 1"/>
+            <feFuncG type="discrete" tableValues="0 0.5 0.8 1"/>
+          </feComponentTransfer>
+
+          <!-- Soft glow -->
+          <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="bigGlow"/>
+          <feComponentTransfer in="bigGlow" result="fadedBigGlow">
+            <feFuncA type="linear" slope="0.25" intercept="0"/>
+          </feComponentTransfer>
+
+          <!-- Slightly soften -->
+          <feGaussianBlur in="wobbly" stdDeviation="0.4" result="softWobbly"/>
+
+          <!-- Apply grain -->
+          <feComposite in="harshGrain" in2="softWobbly" operator="in" result="grainedText"/>
+          <feBlend in="softWobbly" in2="grainedText" mode="screen" result="finalText"/>
+
+          <feMerge>
+            <feMergeNode in="fadedBigGlow"/>
+            <feMergeNode in="finalText"/>
+          </feMerge>
+        </filter>
+
+        <!-- Chalkboard surface noise -->
+        <filter id="chalkboard-noise" x="0%" y="0%" width="100%" height="100%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.7" numOctaves="4" stitchTiles="stitch" result="noise"/>
+          <feColorMatrix type="saturate" values="0" result="mono"/>
+          <feComponentTransfer result="softNoise">
+            <feFuncA type="linear" slope="0.15" intercept="0"/>
+          </feComponentTransfer>
+          <feBlend in="SourceGraphic" in2="softNoise" mode="overlay"/>
+        </filter>
+      </defs>
+    </svg>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
