@@ -70,3 +70,18 @@ When adding a new test, the engine must:
 1. Filter available tests to those the current input fails
 2. Consider difficulty progression (don't add late-game tests too early)
 3. Avoid contradictory test combinations that make the game impossible
+
+## Visual Theme
+
+The game uses a **classroom blackboard** inspired aesthetic:
+
+- **Background:** Dark green/gray chalkboard texture
+- **Typography:** Hand-written, chalky white font (use a font like "Caveat", "Patrick Hand", or similar Google Fonts)
+- **Text color:** Off-white/cream chalk color, slightly rough edges
+- **Accents:** Chalk-like colors for pass/fail indicators (green chalk, red chalk)
+- **Input field:** Styled to look like writing on a chalkboard
+- **Overall feel:** Nostalgic, educational, slightly playful
+
+Font suggestions (Google Fonts):
+- Primary text: "Caveat" or "Patrick Hand"
+- Numbers/input: "Permanent Marker" or keep same as primary
