@@ -8,12 +8,19 @@ import {
   selectNextTest,
 } from '../engine/gameEngine';
 
+export interface SubmitResult {
+  type: 'invalid' | 'failed' | 'passed' | 'won';
+  newLevel?: number;
+}
+
 export interface UseGameStateReturn {
   gameState: GameState;
   testResults: TestResult[];
-  submitInput: (input: string) => void;
+  submitInput: (input: string) => SubmitResult;
   giveUp: () => void;
   resetGame: () => void;
+  setTotalScore: (score: number) => void;
+  triggerGameOver: () => void;
 }
 
 function createInitialState(): GameState {
@@ -23,6 +30,7 @@ function createInitialState(): GameState {
     score: 0,
     isGameOver: false,
     currentInput: '',
+    level: 0,
   };
 }
 
@@ -31,8 +39,8 @@ export function useGameState(): UseGameStateReturn {
   const [testResults, setTestResults] = useState<TestResult[]>([]);
 
   const submitInput = useCallback(
-    (input: string) => {
-      if (gameState.isGameOver) return;
+    (input: string): SubmitResult => {
+      if (gameState.isGameOver) return { type: 'invalid' };
 
       const value = parseInput(input);
 
@@ -44,10 +52,10 @@ export function useGameState(): UseGameStateReturn {
         setTestResults(
           gameState.activeTests.map((test, index) => ({
             test,
-            passed: index !== 0 ? true : false, // First test (is-number) fails
+            passed: index !== 0 ? true : false,
           }))
         );
-        return;
+        return { type: 'failed' };
       }
 
       const results = validateInput(value, gameState.activeTests);
@@ -62,23 +70,27 @@ export function useGameState(): UseGameStateReturn {
         );
 
         if (newTest) {
+          const newLevel = gameState.level + 1;
           setGameState((prev) => ({
             ...prev,
             activeTests: [...prev.activeTests, newTest],
             availableTests: prev.availableTests.filter((t) => t.id !== newTest.id),
-            score: prev.activeTests.length, // Score is number of tests passed
             currentInput: input,
+            level: newLevel,
           }));
+          return { type: 'passed', newLevel };
         } else {
           // No more tests available - player wins!
           setGameState((prev) => ({
             ...prev,
-            score: prev.activeTests.length,
             isGameOver: true,
             currentInput: input,
           }));
+          return { type: 'won' };
         }
       }
+
+      return { type: 'failed' };
     },
     [gameState]
   );
@@ -87,6 +99,20 @@ export function useGameState(): UseGameStateReturn {
     setGameState((prev) => ({
       ...prev,
       isGameOver: true,
+    }));
+  }, []);
+
+  const triggerGameOver = useCallback(() => {
+    setGameState((prev) => ({
+      ...prev,
+      isGameOver: true,
+    }));
+  }, []);
+
+  const setTotalScore = useCallback((score: number) => {
+    setGameState((prev) => ({
+      ...prev,
+      score,
     }));
   }, []);
 
@@ -101,5 +127,7 @@ export function useGameState(): UseGameStateReturn {
     submitInput,
     giveUp,
     resetGame,
+    setTotalScore,
+    triggerGameOver,
   };
 }

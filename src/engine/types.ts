@@ -25,4 +25,6 @@ export interface GameState {
   score: number;
   isGameOver: boolean;
   currentInput: string;
+  level: number;
 }
+

@@ -1,9 +1,92 @@
+import { useCallback, useEffect, useRef } from 'react';
 import { NumberInput } from './components/NumberInput';
 import { TestList } from './components/TestList';
+import { ScoreDisplay } from './components/ScoreDisplay';
 import { useGameState } from './hooks/useGameState';
+import { useScoreTimer } from './hooks/useScoreTimer';
+import { useHighScoreStore } from './stores/highScoreStore';
 
 function App() {
-  const { gameState, testResults, submitInput, giveUp, resetGame } = useGameState();
+  const { highScore, checkAndUpdateHighScore } = useHighScoreStore();
+  const {
+    gameState,
+    testResults,
+    submitInput,
+    giveUp,
+    resetGame,
+    setTotalScore,
+    triggerGameOver,
+  } = useGameState();
+
+  const totalScoreRef = useRef(0);
+  const hasStartedRef = useRef(false);
+
+  const handleTimeOut = useCallback(() => {
+    checkAndUpdateHighScore(totalScoreRef.current);
+    triggerGameOver();
+  }, [checkAndUpdateHighScore, triggerGameOver]);
+
+  const {
+    potentialPoints,
+    startTimer,
+    stopTimer,
+    applyPenalty,
+    resetForNewLevel,
+  } = useScoreTimer(handleTimeOut);
+
+  // Start timer on mount
+  useEffect(() => {
+    if (!hasStartedRef.current) {
+      hasStartedRef.current = true;
+      startTimer(0);
+    }
+  }, [startTimer]);
+
+  const handleSubmit = useCallback(
+    (input: string) => {
+      const result = submitInput(input);
+
+      if (result.type === 'passed' && result.newLevel !== undefined) {
+        // Add potential points to total score
+        const newTotal = totalScoreRef.current + potentialPoints;
+        totalScoreRef.current = newTotal;
+        setTotalScore(newTotal);
+        // Reset timer for new level
+        resetForNewLevel(result.newLevel);
+      } else if (result.type === 'failed' || result.type === 'invalid') {
+        // Apply penalty for wrong answer
+        applyPenalty();
+      } else if (result.type === 'won') {
+        // Player won - add final points and end game
+        const finalTotal = totalScoreRef.current + potentialPoints;
+        totalScoreRef.current = finalTotal;
+        setTotalScore(finalTotal);
+        stopTimer();
+        checkAndUpdateHighScore(finalTotal);
+      }
+    },
+    [
+      submitInput,
+      potentialPoints,
+      setTotalScore,
+      resetForNewLevel,
+      applyPenalty,
+      stopTimer,
+      checkAndUpdateHighScore,
+    ]
+  );
+
+  const handleGiveUp = useCallback(() => {
+    stopTimer();
+    checkAndUpdateHighScore(totalScoreRef.current);
+    giveUp();
+  }, [stopTimer, checkAndUpdateHighScore, giveUp]);
+
+  const handleReset = useCallback(() => {
+    totalScoreRef.current = 0;
+    resetGame();
+    startTimer(0);
+  }, [resetGame, startTimer]);
 
   return (
     <div className="min-h-screen flex flex-col items-center p-4 py-8">
@@ -14,24 +97,23 @@ function App() {
       </p>
 
       {/* Score Display */}
-      <div className="mb-6 text-center">
-        <p className="text-lg chalk-text opacity-70">Score</p>
-        <p className="text-7xl font-bold chalk-glow" style={{ color: 'var(--chalk-yellow)' }}>
-          {gameState.score}
-        </p>
-      </div>
+      <ScoreDisplay
+        highScore={highScore}
+        totalScore={gameState.score}
+        potentialPoints={gameState.isGameOver ? 0 : potentialPoints}
+      />
 
       {/* Input Section */}
       <div className="mb-8 w-full flex flex-col items-center">
-        <NumberInput onSubmit={submitInput} disabled={gameState.isGameOver} />
+        <NumberInput onSubmit={handleSubmit} disabled={gameState.isGameOver} />
 
         <div className="flex gap-3 mt-4">
           {!gameState.isGameOver ? (
-            <button onClick={giveUp} className="chalk-button">
+            <button onClick={handleGiveUp} className="chalk-button">
               Give Up
             </button>
           ) : (
-            <button onClick={resetGame} className="chalk-button chalk-button-success">
+            <button onClick={handleReset} className="chalk-button chalk-button-success">
               Play Again
             </button>
           )}
@@ -45,7 +127,7 @@ function App() {
             Game Over!
           </p>
           <p className="text-xl chalk-text opacity-80">
-            You passed {gameState.score} test{gameState.score !== 1 ? 's' : ''}!
+            Final score: {gameState.score}
           </p>
         </div>
       )}
