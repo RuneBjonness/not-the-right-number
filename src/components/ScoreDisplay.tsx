@@ -18,28 +18,28 @@ export function ScoreDisplay({
   const isLow = potentialPoints <= 5;
 
   return (
-    <div className="mb-6 text-center">
-      {/* High Score */}
-      <p className="text-sm chalk-text opacity-60">
-        High Score: {highScore}
-      </p>
-
+    <div className="flex items-center gap-2 md:gap-4">
       {/* Total Score */}
-      <p className="text-lg chalk-text opacity-70 mt-2">Score</p>
-      <p
-        className="text-7xl font-bold chalk-glow"
-        style={{ color: 'var(--chalk-yellow)' }}
-      >
-        {totalScore}
-      </p>
+      <div className="flex items-baseline gap-1">
+        <span
+          className="text-3xl md:text-5xl font-bold chalk-glow"
+          style={{ color: 'var(--chalk-yellow)' }}
+        >
+          {totalScore}
+        </span>
+        {/* Potential Points */}
+        <span
+          className={`text-lg md:text-2xl font-bold chalk-text ${isLow ? 'animate-pulse' : ''}`}
+          style={{ color: getPotentialColor(potentialPoints) }}
+        >
+          +{potentialPoints}
+        </span>
+      </div>
 
-      {/* Potential Points */}
-      <p
-        className={`text-3xl font-bold mt-2 chalk-text ${isLow ? 'animate-pulse' : ''}`}
-        style={{ color: getPotentialColor(potentialPoints) }}
-      >
-        +{potentialPoints}
-      </p>
+      {/* High Score - hidden on very small screens */}
+      <div className="hidden sm:block text-xs md:text-sm chalk-text opacity-60 border-l border-current pl-2 md:pl-3">
+        Best: {highScore}
+      </div>
     </div>
   );
 }

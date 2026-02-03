@@ -22,7 +22,7 @@ export function NumberInput({ onSubmit, disabled = false }: NumberInputProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex gap-4 w-full max-w-md items-end">
+    <form onSubmit={handleSubmit} className="flex gap-2 w-full items-center">
       <input
         type="text"
         value={value}
@@ -30,15 +30,15 @@ export function NumberInput({ onSubmit, disabled = false }: NumberInputProps) {
         onKeyDown={handleKeyDown}
         disabled={disabled}
         placeholder="Enter a number..."
-        className="chalk-input flex-1 disabled:opacity-50"
+        className="chalk-input flex-1 disabled:opacity-50 text-2xl md:text-3xl text-center"
         autoFocus
       />
       <button
         type="submit"
         disabled={disabled || !value.trim()}
-        className="chalk-button chalk-button-primary"
+        className="chalk-button chalk-button-primary text-xl py-1 px-2"
       >
-        Submit
+        &#10003;
       </button>
     </form>
   );

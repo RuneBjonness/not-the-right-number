@@ -76,10 +76,9 @@ body > * {
   font-family: 'Indie Flower', cursive;
   background: transparent;
   border: none;
-  border-bottom: 4px solid var(--chalk-white-dim);
+  border-bottom: 3px solid var(--chalk-white-dim);
   color: var(--chalk-white);
-  font-size: 2.5rem;
-  padding: 0.5rem 0.25rem;
+  padding: 0.25rem 0.25rem;
   outline: none;
   transition: border-color 0.2s;
   filter: url(#chalk);
@@ -142,8 +141,17 @@ body > * {
 .test-card {
   border: 2px dashed var(--chalk-white-dim);
   border-radius: 4px;
+  padding: 0.5rem 0.75rem;
+  transition: all 0.3s;
+}
+
+/* Latest rule - more prominent */
+.test-card-latest {
+  border: 3px solid var(--chalk-white);
+  border-radius: 6px;
   padding: 0.75rem 1rem;
   transition: all 0.3s;
+  box-shadow: 0 0 12px rgba(232, 232, 216, 0.15);
 }
 
 .test-card-pending {
@@ -158,6 +166,17 @@ body > * {
 .test-card-failed {
   border-color: var(--chalk-red);
   background: rgba(224, 122, 122, 0.1);
+}
+
+/* Latest rule status overrides */
+.test-card-latest.test-card-passed {
+  border-color: var(--chalk-green);
+  box-shadow: 0 0 16px rgba(124, 185, 135, 0.25);
+}
+
+.test-card-latest.test-card-failed {
+  border-color: var(--chalk-red);
+  box-shadow: 0 0 16px rgba(224, 122, 122, 0.25);
 }
 
 /* Animations */
