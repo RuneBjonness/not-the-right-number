@@ -36,8 +36,8 @@ export function ScoreDisplay({
         </span>
       </div>
 
-      {/* High Score - hidden on very small screens */}
-      <div className="hidden sm:block text-xs md:text-sm chalk-text opacity-60 border-l border-current pl-2 md:pl-3">
+      {/* High Score */}
+      <div className="text-xs md:text-sm chalk-text opacity-60 border-l border-current pl-2 md:pl-3">
         Best: {highScore}
       </div>
     </div>

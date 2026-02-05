@@ -22,9 +22,12 @@ function App() {
   } = useGameState();
 
   const totalScoreRef = useRef(0);
+  const gameEndedRef = useRef(false);
 
   const returnToWelcome = useCallback(
     (finalScore: number) => {
+      if (gameEndedRef.current) return;
+      gameEndedRef.current = true;
       const isNew = checkAndUpdateHighScore(finalScore);
       setLastScore(finalScore);
       setIsNewHighScore(isNew);
@@ -47,6 +50,7 @@ function App() {
   } = useScoreTimer(handleTimeOut);
 
   const handleStartGame = useCallback(() => {
+    gameEndedRef.current = false;
     totalScoreRef.current = 0;
     resetGame();
     setShowWelcome(false);
@@ -99,29 +103,29 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* Sticky Header: Score, Input */}
-      <header className="sticky top-0 z-10 bg-[var(--chalkboard-bg)] border-b border-[var(--chalk-white-dim)] pb-2 pt-2 px-3">
-        <div className="max-w-xl mx-auto">
-          {/* Score Row */}
-          <div className="flex items-center justify-center mb-2">
-            <ScoreDisplay
-              highScore={highScore}
-              totalScore={gameState.score}
-              potentialPoints={gameState.isGameOver ? 0 : potentialPoints}
-            />
-          </div>
-
-          {/* Input Row */}
-          <NumberInput onSubmit={handleSubmit} disabled={gameState.isGameOver} />
+    <div className="flex flex-col h-[100dvh]">
+      {/* Top bar: Score */}
+      <header className="flex-shrink-0 bg-[var(--chalkboard-bg)] border-b border-[var(--chalk-white-dim)] py-2 px-3">
+        <div className="max-w-xl mx-auto flex items-center justify-center">
+          <ScoreDisplay
+            highScore={highScore}
+            totalScore={gameState.score}
+            potentialPoints={gameState.isGameOver ? 0 : potentialPoints}
+          />
         </div>
       </header>
 
-      {/* Main Content: Rules */}
-      <main className="flex-1 p-4 pt-4 flex flex-col items-center">
-        {/* Test List */}
+      {/* Middle: Scrollable rules list */}
+      <main className="flex-1 overflow-y-auto p-3 flex flex-col items-center">
         <TestList activeTests={gameState.activeTests} testResults={testResults} />
       </main>
+
+      {/* Bottom: Fixed numpad */}
+      <footer className="flex-shrink-0">
+        <div className="max-w-sm mx-auto px-3 pb-2">
+          <NumberInput onSubmit={handleSubmit} disabled={gameState.isGameOver} />
+        </div>
+      </footer>
     </div>
   );
 }

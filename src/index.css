@@ -137,46 +137,106 @@ body > * {
   background: rgba(124, 185, 135, 0.2);
 }
 
-/* Test card styling */
-.test-card {
-  border: 2px dashed var(--chalk-white-dim);
-  border-radius: 4px;
+/* Calculator panel */
+.calculator-panel {
+  background: #f0ead6;
+  border-radius: 12px;
+  padding: 0.75rem;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+}
+
+/* Calculator display */
+.calc-display {
+  background: #c8d5b9;
+  border-radius: 8px;
   padding: 0.5rem 0.75rem;
-  transition: all 0.3s;
+  margin-bottom: 0.5rem;
+  min-height: 3.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: flex-end;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
-/* Latest rule - more prominent */
-.test-card-latest {
-  border: 3px solid var(--chalk-white);
-  border-radius: 6px;
-  padding: 0.75rem 1rem;
-  transition: all 0.3s;
-  box-shadow: 0 0 12px rgba(232, 232, 216, 0.15);
+/* Last submitted answer in display */
+.calc-display-previous {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: #5a6b50;
+  line-height: 1;
+  min-height: 0.875rem;
 }
 
-.test-card-pending {
-  border-color: var(--chalk-white-dim);
+/* Current input value in display */
+.calc-display-current {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #2a3520;
+  line-height: 1;
 }
 
-.test-card-passed {
-  border-color: var(--chalk-green);
-  background: rgba(124, 185, 135, 0.1);
+/* Calculator buttons */
+.calc-button {
+  font-family: 'Indie Flower', cursive;
+  font-size: 1.5rem;
+  font-weight: 700;
+  background: #e8e2d0;
+  color: #3a3a3a;
+  border: none;
+  border-radius: 10px;
+  padding: 0;
+  height: 52px;
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.test-card-failed {
-  border-color: var(--chalk-red);
-  background: rgba(224, 122, 122, 0.1);
+.calc-button:hover:not(:disabled) {
+  background: #ddd7c5;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
-/* Latest rule status overrides */
-.test-card-latest.test-card-passed {
-  border-color: var(--chalk-green);
-  box-shadow: 0 0 16px rgba(124, 185, 135, 0.25);
+.calc-button:active:not(:disabled) {
+  background: #d2ccba;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
-.test-card-latest.test-card-failed {
-  border-color: var(--chalk-red);
-  box-shadow: 0 0 16px rgba(224, 122, 122, 0.25);
+.calc-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Clear button */
+.calc-button-clear {
+  background: #f0c8c0;
+  color: #8b3a3a;
+}
+
+.calc-button-clear:hover:not(:disabled) {
+  background: #e8b8b0;
+}
+
+.calc-button-clear:active:not(:disabled) {
+  background: #e0a8a0;
+}
+
+/* Submit button */
+.calc-button-submit {
+  background: #b8dbd0;
+  color: #2a5a4a;
+}
+
+.calc-button-submit:hover:not(:disabled) {
+  background: #a8d0c5;
+}
+
+.calc-button-submit:active:not(:disabled) {
+  background: #98c5ba;
 }
 
 /* Animations */

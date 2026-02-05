@@ -1,45 +1,110 @@
-import { useState, type FormEvent, type KeyboardEvent } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 interface NumberInputProps {
   onSubmit: (value: string) => void;
   disabled?: boolean;
 }
 
+const MAX_DIGITS = 6;
+
 export function NumberInput({ onSubmit, disabled = false }: NumberInputProps) {
   const [value, setValue] = useState('');
+  const [lastSubmitted, setLastSubmitted] = useState('');
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    if (value.trim() && !disabled) {
-      onSubmit(value);
+  const appendDigit = useCallback(
+    (digit: string) => {
+      if (disabled) return;
+      setValue((prev) => (prev.length < MAX_DIGITS ? prev + digit : prev));
+    },
+    [disabled]
+  );
+
+  const clear = useCallback(() => {
+    if (disabled) return;
+    setValue('');
+  }, [disabled]);
+
+  const backspace = useCallback(() => {
+    if (disabled) return;
+    setValue((prev) => prev.slice(0, -1));
+  }, [disabled]);
+
+  const submit = useCallback(() => {
+    if (disabled || !value) return;
+    setLastSubmitted(value);
+    onSubmit(value);
+    setValue('');
+  }, [disabled, value, onSubmit]);
+
+  // Keyboard support for desktop
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (disabled) return;
+      if (e.key >= '0' && e.key <= '9') {
+        appendDigit(e.key);
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        submit();
+      } else if (e.key === 'Backspace') {
+        backspace();
+      } else if (e.key === 'Escape' || e.key === 'Delete') {
+        clear();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [disabled, appendDigit, submit, backspace, clear]);
+
+  const numpadButtons = [
+    ['7', '8', '9'],
+    ['4', '5', '6'],
+    ['1', '2', '3'],
+    ['C', '0', '='],
+  ];
+
+  const handleButtonClick = (btn: string) => {
+    if (btn === 'C') {
+      clear();
+    } else if (btn === '=') {
+      submit();
+    } else {
+      appendDigit(btn);
     }
   };
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && !disabled) {
-      handleSubmit(e);
-    }
+  const getButtonClass = (btn: string) => {
+    if (btn === 'C') return 'calc-button calc-button-clear';
+    if (btn === '=') return 'calc-button calc-button-submit';
+    return 'calc-button';
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex gap-2 w-full items-center">
-      <input
-        type="text"
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        onKeyDown={handleKeyDown}
-        disabled={disabled}
-        placeholder="Enter a number..."
-        className="chalk-input flex-1 disabled:opacity-50 text-2xl md:text-3xl text-center"
-        autoFocus
-      />
-      <button
-        type="submit"
-        disabled={disabled || !value.trim()}
-        className="chalk-button chalk-button-primary text-xl py-1 px-2"
-      >
-        &#10003;
-      </button>
-    </form>
+    <div className="calculator-panel">
+      {/* Display */}
+      <div className="calc-display">
+        <span className="calc-display-previous">
+          {lastSubmitted ? `Ans: ${lastSubmitted}` : ''}
+        </span>
+        <span className={`calc-display-current ${value ? '' : 'opacity-40'}`}>
+          {value || '0'}
+        </span>
+      </div>
+
+      {/* Numpad Grid */}
+      <div className="grid grid-cols-3 gap-2">
+        {numpadButtons.flat().map((btn) => (
+          <button
+            key={btn}
+            type="button"
+            className={getButtonClass(btn)}
+            onClick={() => handleButtonClick(btn)}
+            disabled={disabled || (btn === '=' && !value)}
+          >
+            {btn}
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }
