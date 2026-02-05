@@ -4,9 +4,17 @@ import type { Test, TestResult } from '../engine/types';
 interface TestListProps {
   activeTests: Test[];
   testResults: TestResult[];
+  levelScores: number[];
+  potentialPoints: number;
 }
 
-export function TestList({ activeTests, testResults }: TestListProps) {
+function getPotentialColor(points: number): string {
+  if (points > 10) return 'var(--chalk-green)';
+  if (points > 5) return 'var(--chalk-yellow)';
+  return 'var(--chalk-red)';
+}
+
+export function TestList({ activeTests, testResults, levelScores, potentialPoints }: TestListProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom when new rules are added
@@ -23,22 +31,19 @@ export function TestList({ activeTests, testResults }: TestListProps) {
   const getStatusIcon = (status: 'pending' | 'passed' | 'failed') => {
     switch (status) {
       case 'passed':
-        return <span className="text-base" style={{ color: 'var(--chalk-green)' }}>&#10003;</span>;
+        return <span className="text-xl" style={{ color: 'var(--chalk-green)' }}>&#10003;</span>;
       case 'failed':
-        return <span className="text-base" style={{ color: 'var(--chalk-red)' }}>&#10007;</span>;
+        return <span className="text-xl" style={{ color: 'var(--chalk-red)' }}>&#10007;</span>;
       default:
-        return <span className="chalk-text opacity-50 text-base">&#9675;</span>;
+        return <span className="chalk-text opacity-50 text-xl">&#9675;</span>;
     }
   };
 
   const lastIndex = activeTests.length - 1;
 
   return (
-    <div className="w-full max-w-xl">
-      <h2 className="text-lg font-bold chalk-text-strong mb-1">
-        Rules ({activeTests.length})
-      </h2>
-      <div className="space-y-0.5">
+    <div className="w-full max-w-sm">
+      <div className="space-y-1">
         {activeTests.map((test, index) => {
           const status = getTestStatus(test.id);
           const isLatest = index === lastIndex;
@@ -49,16 +54,34 @@ export function TestList({ activeTests, testResults }: TestListProps) {
               key={test.id}
               className={`${isNew ? 'animate-chalk-appear' : ''} flex items-start gap-2 py-0.5`}
             >
-              <div className="flex-shrink-0 w-5 text-center mt-0.5">
+              <div className="flex-shrink-0 w-6 text-center mt-0.5">
                 {getStatusIcon(status)}
               </div>
               <div className="flex-1 min-w-0">
-                <p className={`chalk-text text-sm leading-tight ${isLatest ? 'font-semibold' : ''}`}>
-                  <span className="chalk-text opacity-40 text-xs mr-1">#{index + 1}</span>
-                  {test.name}
-                </p>
+                <div className="flex items-baseline justify-between gap-2">
+                  <p className={`chalk-text text-lg leading-snug ${isLatest ? 'font-semibold' : ''}`}>
+                    {test.name}
+                  </p>
+                  {isLatest ? (
+                    <span
+                      className={`flex-shrink-0 text-lg font-bold chalk-text ${potentialPoints <= 5 ? 'animate-pulse' : ''}`}
+                      style={{ color: getPotentialColor(potentialPoints) }}
+                    >
+                      +{potentialPoints}
+                    </span>
+                  ) : (
+                    levelScores[index] !== undefined && (
+                      <span
+                        className="flex-shrink-0 text-lg chalk-text opacity-70"
+                        style={{ color: 'var(--chalk-yellow)' }}
+                      >
+                        +{levelScores[index]}
+                      </span>
+                    )
+                  )}
+                </div>
                 {isLatest && (
-                  <p className="chalk-text opacity-60 text-xs leading-tight mt-0.5">
+                  <p className="chalk-text opacity-60 text-base leading-snug mt-0.5">
                     {test.description}
                   </p>
                 )}

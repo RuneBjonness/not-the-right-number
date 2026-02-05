@@ -20,6 +20,7 @@ export interface UseGameStateReturn {
   giveUp: () => void;
   resetGame: () => void;
   setTotalScore: (score: number) => void;
+  addLevelScore: (score: number) => void;
   triggerGameOver: () => void;
 }
 
@@ -31,6 +32,7 @@ function createInitialState(): GameState {
     isGameOver: false,
     currentInput: '',
     level: 0,
+    levelScores: [],
   };
 }
 
@@ -116,6 +118,13 @@ export function useGameState(): UseGameStateReturn {
     }));
   }, []);
 
+  const addLevelScore = useCallback((score: number) => {
+    setGameState((prev) => ({
+      ...prev,
+      levelScores: [...prev.levelScores, score],
+    }));
+  }, []);
+
   const resetGame = useCallback(() => {
     setGameState(createInitialState());
     setTestResults([]);
@@ -128,6 +137,7 @@ export function useGameState(): UseGameStateReturn {
     giveUp,
     resetGame,
     setTotalScore,
+    addLevelScore,
     triggerGameOver,
   };
 }
