@@ -1,12 +1,16 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { NumberInput } from './components/NumberInput';
 import { TestList } from './components/TestList';
 import { ScoreDisplay } from './components/ScoreDisplay';
+import { WelcomeScreen } from './components/WelcomeScreen';
 import { useGameState } from './hooks/useGameState';
 import { useScoreTimer } from './hooks/useScoreTimer';
 import { useHighScoreStore } from './stores/highScoreStore';
 
 function App() {
+  const [showWelcome, setShowWelcome] = useState(true);
+  const [lastScore, setLastScore] = useState<number | undefined>(undefined);
+  const [isNewHighScore, setIsNewHighScore] = useState(false);
   const { highScore, checkAndUpdateHighScore } = useHighScoreStore();
   const {
     gameState,
@@ -18,12 +22,21 @@ function App() {
   } = useGameState();
 
   const totalScoreRef = useRef(0);
-  const hasStartedRef = useRef(false);
+
+  const returnToWelcome = useCallback(
+    (finalScore: number) => {
+      const isNew = checkAndUpdateHighScore(finalScore);
+      setLastScore(finalScore);
+      setIsNewHighScore(isNew);
+      setShowWelcome(true);
+    },
+    [checkAndUpdateHighScore]
+  );
 
   const handleTimeOut = useCallback(() => {
-    checkAndUpdateHighScore(totalScoreRef.current);
     triggerGameOver();
-  }, [checkAndUpdateHighScore, triggerGameOver]);
+    returnToWelcome(totalScoreRef.current);
+  }, [triggerGameOver, returnToWelcome]);
 
   const {
     potentialPoints,
@@ -33,13 +46,12 @@ function App() {
     resetForNewLevel,
   } = useScoreTimer(handleTimeOut);
 
-  // Start timer on mount
-  useEffect(() => {
-    if (!hasStartedRef.current) {
-      hasStartedRef.current = true;
-      startTimer(0);
-    }
-  }, [startTimer]);
+  const handleStartGame = useCallback(() => {
+    totalScoreRef.current = 0;
+    resetGame();
+    setShowWelcome(false);
+    startTimer(0);
+  }, [resetGame, startTimer]);
 
   const handleSubmit = useCallback(
     (input: string) => {
@@ -61,7 +73,7 @@ function App() {
         totalScoreRef.current = finalTotal;
         setTotalScore(finalTotal);
         stopTimer();
-        checkAndUpdateHighScore(finalTotal);
+        returnToWelcome(finalTotal);
       }
     },
     [
@@ -71,15 +83,20 @@ function App() {
       resetForNewLevel,
       applyPenalty,
       stopTimer,
-      checkAndUpdateHighScore,
+      returnToWelcome,
     ]
   );
 
-  const handleReset = useCallback(() => {
-    totalScoreRef.current = 0;
-    resetGame();
-    startTimer(0);
-  }, [resetGame, startTimer]);
+  if (showWelcome) {
+    return (
+      <WelcomeScreen
+        onStart={handleStartGame}
+        highScore={highScore}
+        lastScore={lastScore}
+        isNewHighScore={isNewHighScore}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -102,40 +119,8 @@ function App() {
 
       {/* Main Content: Rules */}
       <main className="flex-1 p-4 pt-4 flex flex-col items-center">
-        {/* Game Over Message */}
-        {gameState.isGameOver && (
-          <div className="mb-4 p-4 test-card text-center animate-chalk-appear max-w-xl w-full">
-            <p className="text-2xl md:text-3xl font-bold chalk-glow" style={{ color: 'var(--chalk-yellow)' }}>
-              Game Over!
-            </p>
-            <p className="text-lg chalk-text opacity-80 mb-3">
-              Final score: {gameState.score}
-              {gameState.score >= highScore && gameState.score > 0 && (
-                <span style={{ color: 'var(--chalk-green)' }}> - New Best!</span>
-              )}
-            </p>
-            <button onClick={handleReset} className="chalk-button chalk-button-success">
-              Play Again
-            </button>
-          </div>
-        )}
-
         {/* Test List */}
         <TestList activeTests={gameState.activeTests} testResults={testResults} />
-
-        {/* Footer with title and instructions */}
-        <div className="mt-6 max-w-xl w-full text-center">
-          <p className="chalk-text opacity-40 text-sm">Not The Right Number</p>
-          <details className="mt-2">
-            <summary className="chalk-text opacity-40 text-xs cursor-pointer hover:opacity-60">
-              How to play
-            </summary>
-            <p className="text-xs mt-1 chalk-text opacity-50">
-              Enter numbers that satisfy all the rules. Each success adds a new rule
-              that your current number breaks!
-            </p>
-          </details>
-        </div>
       </main>
     </div>
   );
