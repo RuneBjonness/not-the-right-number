@@ -25,12 +25,12 @@
           </feComponentTransfer>
 
           <!-- Soften the text edges slightly -->
-          <feGaussianBlur in="SourceGraphic" stdDeviation="0.5" result="softText"/>
+          <feGaussianBlur in="SourceGraphic" stdDeviation="0.2" result="softText"/>
 
           <!-- Create dust halo/glow around text -->
-          <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="glow"/>
+          <feGaussianBlur in="SourceGraphic" stdDeviation="0.8" result="glow"/>
           <feComponentTransfer in="glow" result="fadedGlow">
-            <feFuncA type="linear" slope="0.3" intercept="0"/>
+            <feFuncA type="linear" slope="0.15" intercept="0"/>
           </feComponentTransfer>
 
           <!-- Combine soft text with noise to create texture -->

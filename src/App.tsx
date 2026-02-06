@@ -3,14 +3,21 @@ import { NumberInput } from './components/NumberInput';
 import { TestList } from './components/TestList';
 import { ScoreDisplay } from './components/ScoreDisplay';
 import { WelcomeScreen } from './components/WelcomeScreen';
+import { GameOverScreen } from './components/GameOverScreen';
 import { useGameState } from './hooks/useGameState';
 import { useScoreTimer } from './hooks/useScoreTimer';
 import { useHighScoreStore } from './stores/highScoreStore';
+import { collectValidNumbers } from './engine/ruleCompatibility';
 import type { Difficulty } from './engine/difficulty';
 import { getDifficultyConfig } from './engine/difficulty';
+import type { Test } from './engine/types';
 
 function App() {
   const [showWelcome, setShowWelcome] = useState(true);
+  const [showGameOver, setShowGameOver] = useState(false);
+  const [gameOverData, setGameOverData] = useState<{
+    score: number; difficulty: Difficulty; isNewHighScore: boolean; validNumbers: number[];
+  } | null>(null);
   const [lastScore, setLastScore] = useState<number | undefined>(undefined);
   const [lastDifficulty, setLastDifficulty] = useState<Difficulty | undefined>(undefined);
   const [isNewHighScore, setIsNewHighScore] = useState(false);
@@ -28,23 +35,34 @@ function App() {
   const totalScoreRef = useRef(0);
   const gameEndedRef = useRef(false);
 
-  const returnToWelcome = useCallback(
-    (finalScore: number, difficulty: Difficulty) => {
+  const handleGameEnd = useCallback(
+    (finalScore: number, difficulty: Difficulty, activeTests: Test[]) => {
       if (gameEndedRef.current) return;
       gameEndedRef.current = true;
+      const config = getDifficultyConfig(difficulty);
+      const validNumbers = collectValidNumbers(activeTests, config.min, config.max);
       const isNew = checkAndUpdateHighScore(finalScore, difficulty);
-      setLastScore(finalScore);
-      setLastDifficulty(difficulty);
-      setIsNewHighScore(isNew);
-      setShowWelcome(true);
+      setGameOverData({ score: finalScore, difficulty, isNewHighScore: isNew, validNumbers });
+      setShowGameOver(true);
     },
     [checkAndUpdateHighScore]
   );
 
+  const handleContinueFromGameOver = useCallback(() => {
+    if (gameOverData) {
+      setLastScore(gameOverData.score);
+      setLastDifficulty(gameOverData.difficulty);
+      setIsNewHighScore(gameOverData.isNewHighScore);
+    }
+    setShowGameOver(false);
+    setShowWelcome(true);
+    setGameOverData(null);
+  }, [gameOverData]);
+
   const handleTimeOut = useCallback(() => {
     triggerGameOver();
-    returnToWelcome(totalScoreRef.current, gameState.difficulty);
-  }, [triggerGameOver, returnToWelcome, gameState.difficulty]);
+    handleGameEnd(totalScoreRef.current, gameState.difficulty, gameState.activeTests);
+  }, [triggerGameOver, handleGameEnd, gameState.difficulty, gameState.activeTests]);
 
   const {
     potentialPoints,
@@ -86,7 +104,7 @@ function App() {
         totalScoreRef.current = finalTotal;
         setTotalScore(finalTotal);
         stopTimer();
-        returnToWelcome(finalTotal, gameState.difficulty);
+        handleGameEnd(finalTotal, gameState.difficulty, gameState.activeTests);
       }
     },
     [
@@ -97,10 +115,22 @@ function App() {
       resetForNewLevel,
       applyPenalty,
       stopTimer,
-      returnToWelcome,
+      handleGameEnd,
       gameState.difficulty,
+      gameState.activeTests,
     ]
   );
+
+  if (showGameOver && gameOverData) {
+    return (
+      <GameOverScreen
+        score={gameOverData.score}
+        isNewHighScore={gameOverData.isNewHighScore}
+        validNumbers={gameOverData.validNumbers}
+        onContinue={handleContinueFromGameOver}
+      />
+    );
+  }
 
   if (showWelcome) {
     return (

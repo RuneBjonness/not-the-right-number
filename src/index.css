@@ -288,3 +288,26 @@ body > * {
 .animate-chalk-appear {
   animation: chalk-appear 0.3s ease-out;
 }
+
+/* Chalk-styled scrollbar for valid numbers list */
+.chalk-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.chalk-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chalk-scroll::-webkit-scrollbar-thumb {
+  background: rgba(232, 232, 216, 0.25);
+  border-radius: 4px;
+}
+
+.chalk-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(232, 232, 216, 0.4);
+}
+
+.chalk-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(232, 232, 216, 0.25) transparent;
+}

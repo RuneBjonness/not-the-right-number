@@ -45,3 +45,21 @@ export function countValidNumbers(rules: Test[], min: number, max: number): numb
   }
   return count;
 }
+
+/**
+ * Collects all integers in [min, max] that satisfy ALL given rules.
+ */
+export function collectValidNumbers(rules: Test[], min: number, max: number): number[] {
+  const result: number[] = [];
+  for (let n = min; n <= max; n++) {
+    let valid = true;
+    for (let r = 0; r < rules.length; r++) {
+      if (!rules[r].validate(n)) {
+        valid = false;
+        break;
+      }
+    }
+    if (valid) result.push(n);
+  }
+  return result;
+}
