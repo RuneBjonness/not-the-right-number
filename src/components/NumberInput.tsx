@@ -3,20 +3,19 @@ import { useState, useEffect, useCallback } from 'react';
 interface NumberInputProps {
   onSubmit: (value: string) => void;
   disabled?: boolean;
+  maxDigits?: number;
 }
 
-const MAX_DIGITS = 6;
-
-export function NumberInput({ onSubmit, disabled = false }: NumberInputProps) {
+export function NumberInput({ onSubmit, disabled = false, maxDigits = 6 }: NumberInputProps) {
   const [value, setValue] = useState('');
   const [lastSubmitted, setLastSubmitted] = useState('');
 
   const appendDigit = useCallback(
     (digit: string) => {
       if (disabled) return;
-      setValue((prev) => (prev.length < MAX_DIGITS ? prev + digit : prev));
+      setValue((prev) => (prev.length < maxDigits ? prev + digit : prev));
     },
-    [disabled]
+    [disabled, maxDigits]
   );
 
   const clear = useCallback(() => {

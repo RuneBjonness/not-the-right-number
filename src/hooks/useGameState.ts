@@ -1,5 +1,7 @@
 import { useState, useCallback } from 'react';
 import type { GameState, TestResult } from '../engine/types';
+import type { Difficulty } from '../engine/difficulty';
+import { getDifficultyConfig } from '../engine/difficulty';
 import { getInitialTest, getAvailableTests } from '../engine/tests';
 import {
   parseInput,
@@ -7,7 +9,6 @@ import {
   allTestsPassed,
   selectNextTest,
 } from '../engine/gameEngine';
-import { MAX_VALUE, MIN_VALUE } from '../engine/ruleCompatibility';
 
 export interface SubmitResult {
   type: 'invalid' | 'failed' | 'passed' | 'won';
@@ -19,27 +20,29 @@ export interface UseGameStateReturn {
   testResults: TestResult[];
   submitInput: (input: string) => SubmitResult;
   giveUp: () => void;
-  resetGame: () => void;
+  resetGame: (difficulty: Difficulty) => void;
   setTotalScore: (score: number) => void;
   addLevelScore: (score: number) => void;
   triggerGameOver: () => void;
 }
 
-function createInitialState(): GameState {
+function createInitialState(difficulty: Difficulty): GameState {
+  const config = getDifficultyConfig(difficulty);
   return {
-    activeTests: [getInitialTest()],
-    availableTests: getAvailableTests(),
+    activeTests: [getInitialTest(difficulty)],
+    availableTests: getAvailableTests(difficulty),
     score: 0,
     isGameOver: false,
     currentInput: '',
     level: 0,
     levelScores: [],
-    validCount: MAX_VALUE - MIN_VALUE + 1, // 999,999
+    validCount: config.max - config.min + 1,
+    difficulty,
   };
 }
 
 export function useGameState(): UseGameStateReturn {
-  const [gameState, setGameState] = useState<GameState>(createInitialState);
+  const [gameState, setGameState] = useState<GameState>(() => createInitialState('normal'));
   const [testResults, setTestResults] = useState<TestResult[]>([]);
 
   const submitInput = useCallback(
@@ -48,11 +51,9 @@ export function useGameState(): UseGameStateReturn {
 
       const value = parseInput(input);
 
-      // Update current input
       setGameState((prev) => ({ ...prev, currentInput: input }));
 
       if (value === null) {
-        // Invalid input - fail the first test
         setTestResults(
           gameState.activeTests.map((test, index) => ({
             test,
@@ -66,11 +67,13 @@ export function useGameState(): UseGameStateReturn {
       setTestResults(results);
 
       if (allTestsPassed(results)) {
-        // All tests passed - add a new test
+        const config = getDifficultyConfig(gameState.difficulty);
         const result = selectNextTest(
           value,
           gameState.activeTests,
-          gameState.availableTests
+          gameState.availableTests,
+          config.min,
+          config.max
         );
 
         if (result) {
@@ -85,7 +88,6 @@ export function useGameState(): UseGameStateReturn {
           }));
           return { type: 'passed', newLevel };
         } else {
-          // No more tests available - player wins!
           setGameState((prev) => ({
             ...prev,
             isGameOver: true,
@@ -101,24 +103,15 @@ export function useGameState(): UseGameStateReturn {
   );
 
   const giveUp = useCallback(() => {
-    setGameState((prev) => ({
-      ...prev,
-      isGameOver: true,
-    }));
+    setGameState((prev) => ({ ...prev, isGameOver: true }));
   }, []);
 
   const triggerGameOver = useCallback(() => {
-    setGameState((prev) => ({
-      ...prev,
-      isGameOver: true,
-    }));
+    setGameState((prev) => ({ ...prev, isGameOver: true }));
   }, []);
 
   const setTotalScore = useCallback((score: number) => {
-    setGameState((prev) => ({
-      ...prev,
-      score,
-    }));
+    setGameState((prev) => ({ ...prev, score }));
   }, []);
 
   const addLevelScore = useCallback((score: number) => {
@@ -128,8 +121,8 @@ export function useGameState(): UseGameStateReturn {
     }));
   }, []);
 
-  const resetGame = useCallback(() => {
-    setGameState(createInitialState());
+  const resetGame = useCallback((difficulty: Difficulty) => {
+    setGameState(createInitialState(difficulty));
     setTestResults([]);
   }, []);
 

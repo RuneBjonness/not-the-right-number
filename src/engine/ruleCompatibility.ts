@@ -1,8 +1,5 @@
 import type { Test } from './types';
 
-export const MIN_VALUE = 1;
-export const MAX_VALUE = 999_999;
-
 /**
  * Pairs of rule IDs that must never coexist.
  * This is a fast pre-filter; the valid-count check is the ultimate safety net.
@@ -32,11 +29,11 @@ export function violatesExclusion(candidateId: string, activeIds: Set<string>): 
 }
 
 /**
- * Counts how many integers in [MIN_VALUE, MAX_VALUE] satisfy ALL given rules.
+ * Counts how many integers in [min, max] satisfy ALL given rules.
  */
-export function countValidNumbers(rules: Test[]): number {
+export function countValidNumbers(rules: Test[], min: number, max: number): number {
   let count = 0;
-  for (let n = MIN_VALUE; n <= MAX_VALUE; n++) {
+  for (let n = min; n <= max; n++) {
     let valid = true;
     for (let r = 0; r < rules.length; r++) {
       if (!rules[r].validate(n)) {
@@ -47,22 +44,4 @@ export function countValidNumbers(rules: Test[]): number {
     if (valid) count++;
   }
   return count;
-}
-
-/**
- * Quick check: returns true if at least one integer in [MIN_VALUE, MAX_VALUE]
- * satisfies ALL given rules. Short-circuits as soon as one is found.
- */
-export function hasAnyValidNumber(rules: Test[]): boolean {
-  for (let n = MIN_VALUE; n <= MAX_VALUE; n++) {
-    let valid = true;
-    for (let r = 0; r < rules.length; r++) {
-      if (!rules[r].validate(n)) {
-        valid = false;
-        break;
-      }
-    }
-    if (valid) return true;
-  }
-  return false;
 }

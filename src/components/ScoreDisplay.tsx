@@ -14,17 +14,15 @@ export function ScoreDisplay({
   validCount,
 }: ScoreDisplayProps) {
   return (
-    <div className="flex items-center gap-3">
-      <span className="text-xs chalk-text opacity-50">
-        Best: {highScore}
-      </span>
+    <div className="flex items-center gap-5">
+      <span className="text-m chalk-text opacity-80">Best: {highScore}</span>
       <span
         className="text-lg font-bold chalk-glow"
-        style={{ color: 'var(--chalk-yellow)' }}
+        style={{ color: "var(--chalk-yellow)" }}
       >
         Score: {totalScore}
       </span>
-      <span className="text-xs chalk-text opacity-50">
+      <span className="text-m chalk-text opacity-80">
         Valid: {formatCount(validCount)}
       </span>
     </div>

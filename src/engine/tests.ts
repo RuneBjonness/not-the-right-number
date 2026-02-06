@@ -1,5 +1,7 @@
 import type { Test } from './types';
 import { Tier } from './types';
+import type { Difficulty } from './difficulty';
+import { getDifficultyConfig } from './difficulty';
 
 function digitSum(value: number): number {
   return value
@@ -12,16 +14,10 @@ function digits(value: number): string[] {
   return value.toString().split('');
 }
 
+/**
+ * All rules EXCEPT the base range rule (which is created dynamically per difficulty).
+ */
 export const allTests: Test[] = [
-  // ── Always-first base rule ──────────────────────────────────────
-  {
-    id: 'between-1-and-999999',
-    name: 'Must be between 1 and 999,999',
-    description: 'The number must be a whole number from 1 to 999,999',
-    tier: Tier.EARLY,
-    validate: (v) => Number.isInteger(v) && v >= 1 && v <= 999_999,
-  },
-
   // ── EARLY tier ──────────────────────────────────────────────────
   {
     id: 'is-even',
@@ -373,7 +369,6 @@ export const allTests: Test[] = [
     description: 'The number must equal n×(n+1)/2 for some n (e.g., 1, 3, 6, 10, 15)',
     tier: Tier.LATE,
     validate: (v) => {
-      // n*(n+1)/2 = v  =>  n^2 + n - 2v = 0  =>  n = (-1 + sqrt(1+8v)) / 2
       const n = (-1 + Math.sqrt(1 + 8 * v)) / 2;
       return Number.isInteger(Math.round(n)) && Math.round(n) * (Math.round(n) + 1) / 2 === v;
     },
@@ -475,10 +470,22 @@ export const allTests: Test[] = [
   },
 ];
 
-export function getInitialTest(): Test {
-  return allTests[0]; // "Must be between 1 and 999,999"
+function createBaseRule(difficulty: Difficulty): Test {
+  const { max } = getDifficultyConfig(difficulty);
+  return {
+    id: `base-range-${max}`,
+    name: `Must be between 1 and ${max.toLocaleString()}`,
+    description: `The number must be a whole number from 1 to ${max.toLocaleString()}`,
+    tier: Tier.EARLY,
+    validate: (v) => Number.isInteger(v) && v >= 1 && v <= max,
+  };
 }
 
-export function getAvailableTests(): Test[] {
-  return allTests.slice(1);
+export function getInitialTest(difficulty: Difficulty): Test {
+  return createBaseRule(difficulty);
+}
+
+export function getAvailableTests(difficulty: Difficulty): Test[] {
+  const { excludedRuleIds } = getDifficultyConfig(difficulty);
+  return allTests.filter((t) => !excludedRuleIds.has(t.id));
 }

@@ -1,3 +1,5 @@
+import type { Difficulty } from './difficulty';
+
 export const Tier = {
   EARLY: 'EARLY',
   MID: 'MID',
@@ -28,5 +30,8 @@ export interface GameState {
   level: number;
   levelScores: number[];
   validCount: number;
+  difficulty: Difficulty;
 }
+
+export type { Difficulty } from './difficulty';
 
