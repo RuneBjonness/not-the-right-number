@@ -125,6 +125,7 @@ function App() {
             <ScoreDisplay
               highScore={highScore}
               totalScore={gameState.score}
+              validCount={gameState.validCount}
             />
           </div>
           <NumberInput onSubmit={handleSubmit} disabled={gameState.isGameOver} />

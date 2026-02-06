@@ -1,11 +1,17 @@
 interface ScoreDisplayProps {
   highScore: number;
   totalScore: number;
+  validCount: number;
+}
+
+function formatCount(n: number): string {
+  return n.toLocaleString();
 }
 
 export function ScoreDisplay({
   highScore,
   totalScore,
+  validCount,
 }: ScoreDisplayProps) {
   return (
     <div className="flex items-center gap-3">
@@ -17,6 +23,9 @@ export function ScoreDisplay({
         style={{ color: 'var(--chalk-yellow)' }}
       >
         Score: {totalScore}
+      </span>
+      <span className="text-xs chalk-text opacity-50">
+        Valid: {formatCount(validCount)}
       </span>
     </div>
   );

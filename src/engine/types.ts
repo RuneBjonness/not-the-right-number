@@ -27,5 +27,6 @@ export interface GameState {
   currentInput: string;
   level: number;
   levelScores: number[];
+  validCount: number;
 }
 

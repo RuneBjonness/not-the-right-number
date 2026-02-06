@@ -1,5 +1,6 @@
 import type { Test, TestResult } from './types';
 import { Tier } from './types';
+import { violatesExclusion, MIN_VALUE, MAX_VALUE } from './ruleCompatibility';
 
 export function parseInput(input: string): number | null {
   const trimmed = input.trim();
@@ -20,42 +21,98 @@ export function allTestsPassed(results: TestResult[]): boolean {
   return results.every((r) => r.passed);
 }
 
+interface CandidateScore {
+  test: Test;
+  validCount: number;
+}
+
+/**
+ * Single-pass scoring: scan [MIN_VALUE, MAX_VALUE] once,
+ * and for every number that passes all active rules, check which
+ * candidates it also passes. This is O(N * C) where N = range size
+ * and C = candidate count, but avoids repeated full scans.
+ */
+function scoreCandidates(
+  activeTests: Test[],
+  candidates: Test[]
+): CandidateScore[] {
+  const counts = new Array<number>(candidates.length).fill(0);
+
+  for (let n = MIN_VALUE; n <= MAX_VALUE; n++) {
+    // Check active rules first (most constraining → fast rejection)
+    let passesActive = true;
+    for (let r = 0; r < activeTests.length; r++) {
+      if (!activeTests[r].validate(n)) {
+        passesActive = false;
+        break;
+      }
+    }
+    if (!passesActive) continue;
+
+    // This number passes all active rules — check each candidate
+    for (let c = 0; c < candidates.length; c++) {
+      if (candidates[c].validate(n)) {
+        counts[c]++;
+      }
+    }
+  }
+
+  const scored: CandidateScore[] = [];
+  for (let c = 0; c < candidates.length; c++) {
+    if (counts[c] > 0) {
+      scored.push({ test: candidates[c], validCount: counts[c] });
+    }
+  }
+  return scored;
+}
+
 export function selectNextTest(
   currentValue: number,
   activeTests: Test[],
   availableTests: Test[]
-): Test | null {
-  // Filter to tests that the current value fails
+): { test: Test; validCount: number } | null {
+  // Only consider tests that the current value FAILS
   const failingTests = availableTests.filter((test) => !test.validate(currentValue));
-
   if (failingTests.length === 0) return null;
 
-  // Get tier order for progression
+  // Build set of active rule IDs for exclusion checks
+  const activeIds = new Set(activeTests.map((t) => t.id));
+
+  // Tier progression
   const tierOrder = [Tier.EARLY, Tier.MID, Tier.LATE];
-
-  // Calculate target tier based on number of active tests
   let targetTierIndex = 0;
-  if (activeTests.length >= 5) targetTierIndex = 1; // Allow MID tier
-  if (activeTests.length >= 10) targetTierIndex = 2; // Allow LATE tier
+  if (activeTests.length >= 5) targetTierIndex = 1;
+  if (activeTests.length >= 10) targetTierIndex = 2;
 
-  // Filter tests by tier progression
-  const eligibleTests = failingTests.filter((test) => {
+  // Filter by tier and exclusion rules
+  const eligible = failingTests.filter((test) => {
     const testTierIndex = tierOrder.indexOf(test.tier);
-    return testTierIndex <= targetTierIndex;
+    if (testTierIndex > targetTierIndex) return false;
+    if (violatesExclusion(test.id, activeIds)) return false;
+    return true;
   });
 
-  if (eligibleTests.length === 0) {
-    // Fall back to any failing test if tier filtering is too strict
-    return failingTests[Math.floor(Math.random() * failingTests.length)];
-  }
+  if (eligible.length === 0) return null;
 
-  // Prefer tests from the current target tier, but allow earlier tiers
-  const preferredTests = eligibleTests.filter(
-    (test) => tierOrder.indexOf(test.tier) === targetTierIndex
+  // Score all candidates in a single pass over the number range
+  const scored = scoreCandidates(activeTests, eligible);
+
+  if (scored.length === 0) return null;
+
+  // Sort by valid count descending (most permissive first)
+  scored.sort((a, b) => b.validCount - a.validCount);
+
+  // Prefer the upper half of candidates (keeps game playable)
+  // but add some randomness so it's not always the most permissive
+  const upperHalf = scored.slice(0, Math.max(1, Math.ceil(scored.length / 2)));
+
+  // Within the upper half, prefer rules from the target tier
+  const preferred = upperHalf.filter(
+    (c) => tierOrder.indexOf(c.test.tier) === targetTierIndex
   );
 
-  const testPool = preferredTests.length > 0 ? preferredTests : eligibleTests;
+  const pool = preferred.length > 0 ? preferred : upperHalf;
+  const pick = pool[Math.floor(Math.random() * pool.length)];
 
-  // Random selection from eligible tests
-  return testPool[Math.floor(Math.random() * testPool.length)];
+  return { test: pick.test, validCount: pick.validCount };
 }

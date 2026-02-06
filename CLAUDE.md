@@ -36,42 +36,50 @@ npm run test         # Run tests (if configured)
 
 ### Test System
 
-Tests are organized by category and difficulty progression:
+The base rule constrains all numbers to integers 1–999,999. Tests are organized by tier:
 
-**Early Game (Basic Properties)**
+**Early Game (Basic Properties)** — ~17 rules
 
-- Even/odd, positive/negative
-- Greater than X, between ranges
-- Divisibility rules
+- Even/odd, parity of last digit
+- Greater/less than thresholds
+- Divisibility rules (3, 5, 7, 11, NOT 4)
 - Digit count constraints
 
-**Mid Game (Mathematical & Digit-based)**
+**Mid Game (Mathematical & Digit-based)** — ~20 rules
 
-- Prime numbers, perfect squares, Fibonacci
-- Digit sum requirements
-- Contains specific digit, palindrome, ascending/descending digits
+- Prime numbers, perfect squares, Harshad numbers
+- Digit sum requirements (even/odd, divisible by 3, > 10)
+- Contains/excludes specific digits, palindrome, no repeating digits
+- Consecutive digits, repeated pairs, digit product, first-digit constraints
+- Exact digit count (3, 4, or 5 digits)
 
-**Late Game (Comparison & Expressions)**
+**Late Game (Complex Constraints)** — ~10 rules
 
-- Input as mathematical expression (e.g., "12+5")
-- Rules from early game and mid game - but this time each operand must satisfy individual tests (while the result of the expression must still satisfy the existing tests)
+- Fibonacci, triangular, perfect cube, power of 2
+- Ascending/descending digits, alternating parity
+- First = last digit, all-prime digits, first+last > 10
 
 ### Key Components
 
-- `src/components/NumberInput.tsx`: Main input field with submit button
+- `src/components/NumberInput.tsx`: Calculator-style input with 6-digit limit
 - `src/components/TestList.tsx`: Stacked list showing all active tests with pass/fail indicators
 - `src/engine/gameEngine.ts`: Core logic for validating input and selecting new tests
-- `src/engine/tests.ts`: Test definitions organized by tier (EARLY, MID, LATE)
+- `src/engine/tests.ts`: ~47 test definitions organized by tier (EARLY, MID, LATE)
+- `src/engine/ruleCompatibility.ts`: Exclusion pairs and valid-number counting
 - `src/engine/types.ts`: TypeScript types for Test, GameState, TestResult
 - `src/hooks/useGameState.ts`: Game state management hook
 
-### Test Selection Strategy
+### Test Selection Strategy (Fairness Engine)
 
-When adding a new test, the engine must:
+When adding a new test, the engine:
 
-1. Filter available tests to those the current input fails
-2. Consider difficulty progression (don't add late-game tests too early)
-3. Avoid contradictory test combinations that make the game impossible
+1. Filters available tests to those the current input fails
+2. Applies tier progression (EARLY → MID at 5 rules → LATE at 10 rules)
+3. Rejects rules that violate exclusion pairs (e.g., even+odd, prime+even)
+4. **Single-pass scoring:** scans 1–999,999 once to count how many valid answers remain for each candidate rule
+5. Rejects any candidate that would leave 0 valid numbers (impossible state)
+6. Prefers candidates from the upper half by valid count (keeps game playable)
+7. Shows remaining valid-number count to the player
 
 ## Visual Theme
 

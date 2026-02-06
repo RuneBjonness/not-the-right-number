@@ -7,6 +7,7 @@ import {
   allTestsPassed,
   selectNextTest,
 } from '../engine/gameEngine';
+import { MAX_VALUE, MIN_VALUE } from '../engine/ruleCompatibility';
 
 export interface SubmitResult {
   type: 'invalid' | 'failed' | 'passed' | 'won';
@@ -33,6 +34,7 @@ function createInitialState(): GameState {
     currentInput: '',
     level: 0,
     levelScores: [],
+    validCount: MAX_VALUE - MIN_VALUE + 1, // 999,999
   };
 }
 
@@ -65,20 +67,21 @@ export function useGameState(): UseGameStateReturn {
 
       if (allTestsPassed(results)) {
         // All tests passed - add a new test
-        const newTest = selectNextTest(
+        const result = selectNextTest(
           value,
           gameState.activeTests,
           gameState.availableTests
         );
 
-        if (newTest) {
+        if (result) {
           const newLevel = gameState.level + 1;
           setGameState((prev) => ({
             ...prev,
-            activeTests: [...prev.activeTests, newTest],
-            availableTests: prev.availableTests.filter((t) => t.id !== newTest.id),
+            activeTests: [...prev.activeTests, result.test],
+            availableTests: prev.availableTests.filter((t) => t.id !== result.test.id),
             currentInput: input,
             level: newLevel,
+            validCount: result.validCount,
           }));
           return { type: 'passed', newLevel };
         } else {
