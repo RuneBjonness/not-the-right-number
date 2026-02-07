@@ -188,6 +188,10 @@ export function WelcomeScreen({
                       <span className="opacity-80">{score || "-"}</span>
                     </span>
                   </span>
+                  <span
+                    className="self-stretch w-px opacity-40"
+                    style={{ background: "var(--chalk-white)" }}
+                  />
                   <span className="flex flex-col items-start leading-tight">
                     <span className="text-lg opacity-90">
                       1 – {config.max.toLocaleString()}
