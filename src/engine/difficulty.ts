@@ -7,6 +7,7 @@ export interface DifficultyConfig {
   maxDigits: number;
   scoreMultiplier: number;
   excludedRuleIds: Set<string>;
+  winThreshold: number;
 }
 
 const EASY_EXCLUDED = new Set([
@@ -31,6 +32,7 @@ const configs: Record<Difficulty, DifficultyConfig> = {
     maxDigits: 3,
     scoreMultiplier: 1,
     excludedRuleIds: EASY_EXCLUDED,
+    winThreshold: 4,
   },
   normal: {
     label: 'Normal',
@@ -39,6 +41,7 @@ const configs: Record<Difficulty, DifficultyConfig> = {
     maxDigits: 4,
     scoreMultiplier: 1.5,
     excludedRuleIds: NORMAL_EXCLUDED,
+    winThreshold: 10,
   },
   hard: {
     label: 'Hard',
@@ -47,6 +50,7 @@ const configs: Record<Difficulty, DifficultyConfig> = {
     maxDigits: 6,
     scoreMultiplier: 2,
     excludedRuleIds: HARD_EXCLUDED,
+    winThreshold: 25,
   },
 };
 

@@ -1,8 +1,10 @@
 import { useState, useCallback } from 'react';
-import type { GameState, TestResult } from '../engine/types';
+import type { GameState, TestResult, Test } from '../engine/types';
+import { Tier } from '../engine/types';
 import type { Difficulty } from '../engine/difficulty';
 import { getDifficultyConfig } from '../engine/difficulty';
 import { getInitialTest, getAvailableTests } from '../engine/tests';
+import { collectValidNumbers } from '../engine/ruleCompatibility';
 import {
   parseInput,
   validateInput,
@@ -33,11 +35,13 @@ function createInitialState(difficulty: Difficulty): GameState {
     availableTests: getAvailableTests(difficulty),
     score: 0,
     isGameOver: false,
+    isWon: false,
     currentInput: '',
     level: 0,
     levelScores: [],
     validCount: config.max - config.min + 1,
     difficulty,
+    finalRuleTarget: null,
   };
 }
 
@@ -68,12 +72,25 @@ export function useGameState(): UseGameStateReturn {
 
       if (allTestsPassed(results)) {
         const config = getDifficultyConfig(gameState.difficulty);
+
+        // If the final "Must be X" rule is active and passed, the player wins
+        if (gameState.finalRuleTarget !== null) {
+          setGameState((prev) => ({
+            ...prev,
+            isWon: true,
+            isGameOver: true,
+            currentInput: input,
+          }));
+          return { type: 'won' };
+        }
+
         const result = selectNextTest(
           value,
           gameState.activeTests,
           gameState.availableTests,
           config.min,
-          config.max
+          config.max,
+          config.winThreshold
         );
 
         if (result) {
@@ -88,12 +105,37 @@ export function useGameState(): UseGameStateReturn {
           }));
           return { type: 'passed', newLevel };
         } else {
+          // No more rules can be added — create a "Must be X" final rule
+          const validNumbers = collectValidNumbers(gameState.activeTests, config.min, config.max);
+          const candidates = validNumbers.filter((n) => n !== value);
+          if (candidates.length === 0) {
+            // Edge case: only the current number is valid, player wins immediately
+            setGameState((prev) => ({
+              ...prev,
+              isWon: true,
+              isGameOver: true,
+              currentInput: input,
+            }));
+            return { type: 'won' };
+          }
+          const target = candidates[Math.floor(Math.random() * candidates.length)];
+          const finalTest: Test = {
+            id: 'must-be-final',
+            name: `Must be ${target.toLocaleString()}`,
+            description: `The number must be exactly ${target.toLocaleString()}`,
+            tier: Tier.LATE,
+            validate: (v: number) => v === target,
+          };
+          const newLevel = gameState.level + 1;
           setGameState((prev) => ({
             ...prev,
-            isGameOver: true,
+            activeTests: [...prev.activeTests, finalTest],
             currentInput: input,
+            level: newLevel,
+            validCount: 1,
+            finalRuleTarget: target,
           }));
-          return { type: 'won' };
+          return { type: 'passed', newLevel };
         }
       }
 

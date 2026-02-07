@@ -26,11 +26,13 @@ export interface GameState {
   availableTests: Test[];
   score: number;
   isGameOver: boolean;
+  isWon: boolean;
   currentInput: string;
   level: number;
   levelScores: number[];
   validCount: number;
   difficulty: Difficulty;
+  finalRuleTarget: number | null;
 }
 
 export type { Difficulty } from './difficulty';

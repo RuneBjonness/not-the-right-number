@@ -35,7 +35,8 @@ function scoreCandidates(
   activeTests: Test[],
   candidates: Test[],
   min: number,
-  max: number
+  max: number,
+  minValidCount: number = 1
 ): CandidateScore[] {
   const counts = new Array<number>(candidates.length).fill(0);
 
@@ -58,7 +59,7 @@ function scoreCandidates(
 
   const scored: CandidateScore[] = [];
   for (let c = 0; c < candidates.length; c++) {
-    if (counts[c] > 0) {
+    if (counts[c] >= minValidCount) {
       scored.push({ test: candidates[c], validCount: counts[c] });
     }
   }
@@ -70,7 +71,8 @@ export function selectNextTest(
   activeTests: Test[],
   availableTests: Test[],
   min: number,
-  max: number
+  max: number,
+  minValidCount: number = 1
 ): { test: Test; validCount: number } | null {
   const failingTests = availableTests.filter((test) => !test.validate(currentValue));
   if (failingTests.length === 0) return null;
@@ -91,7 +93,7 @@ export function selectNextTest(
 
   if (eligible.length === 0) return null;
 
-  const scored = scoreCandidates(activeTests, eligible, min, max);
+  const scored = scoreCandidates(activeTests, eligible, min, max, minValidCount);
 
   if (scored.length === 0) return null;
 

@@ -6,9 +6,11 @@ import { BrainIcon } from "./BrainIcon";
 interface WelcomeScreenProps {
   onStart: (difficulty: Difficulty) => void;
   highScores: { easy: number; normal: number; hard: number };
+  solved: { easy: boolean; normal: boolean; hard: boolean };
   lastScore?: number;
   lastDifficulty?: Difficulty;
   isNewHighScore?: boolean;
+  lastIsWon?: boolean;
 }
 
 const difficulties: Difficulty[] = ["easy", "normal", "hard"];
@@ -21,9 +23,11 @@ const filledBrains: Record<Difficulty, number> = {
 export function WelcomeScreen({
   onStart,
   highScores,
+  solved,
   lastScore,
   lastDifficulty,
   isNewHighScore,
+  lastIsWon,
 }: WelcomeScreenProps) {
   const title = "Not The Right Number";
   const isReturning = lastScore !== undefined;
@@ -75,18 +79,39 @@ export function WelcomeScreen({
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4">
       {/* Title */}
-      <h1 className="text-4xl md:text-6xl font-bold chalk-text-strong chalk-glow text-center mb-8 min-h-[1.2em]">
-        {title.slice(0, displayedChars)}
-      </h1>
+      <div className="relative inline-block mb-8">
+        <h1 className="text-4xl md:text-6xl font-bold chalk-text-strong chalk-glow text-center min-h-[1.2em]">
+          {title.slice(0, displayedChars)}
+        </h1>
+        {lastIsWon && isReturning && (
+          <div
+            className="absolute inset-0 flex items-center justify-center pointer-events-none"
+            style={{ transform: "rotate(-3deg)" }}
+          >
+            <div
+              className="w-[110%] chalk-glow"
+              style={{
+                height: "6px",
+                background: "var(--chalk-red)",
+                borderRadius: "3px",
+                opacity: 0.9,
+                filter: "url(#chalk)",
+              }}
+            />
+          </div>
+        )}
+      </div>
 
       {/* Game over results */}
       {isReturning && (
         <div className="mb-6 text-center animate-chalk-appear">
           <p
             className="text-2xl md:text-3xl font-bold chalk-glow"
-            style={{ color: "var(--chalk-yellow)" }}
+            style={{
+              color: lastIsWon ? "var(--chalk-green)" : "var(--chalk-yellow)",
+            }}
           >
-            Game Over!
+            {lastIsWon ? "That's the right number!" : "Game Over!"}
           </p>
           <p className="text-xl md:text-2xl chalk-text opacity-80 mt-2">
             Score: {lastScore}
@@ -135,6 +160,7 @@ export function WelcomeScreen({
             const isSelected = d === selectedDifficulty;
             const score = highScores[d];
             const filled = filledBrains[d];
+            const isSolved = solved[d];
             return (
               <button
                 key={d}
@@ -147,20 +173,33 @@ export function WelcomeScreen({
                 }
               >
                 <span className="flex items-center gap-4">
-                  <span className="flex gap-1.5">
-                    {[0, 1, 2].map((i) => (
-                      <BrainIcon key={i} filled={i < filled} size={32} />
-                    ))}
+                  <span className="flex flex-col items-center gap-1">
+                    <span className="flex gap-1.5">
+                      {[0, 1, 2].map((i) => (
+                        <BrainIcon key={i} filled={i < filled} size={32} />
+                      ))}
+                    </span>
+                    <span className="flex items-center gap-2 text-lg font-bold">
+                      <span
+                        className="chalk-glow"
+                        style={{
+                          color: isSolved
+                            ? "var(--chalk-green)"
+                            : "var(--chalk-red)",
+                        }}
+                      >
+                        {isSolved ? "Solved!" : "Unsolved"}
+                      </span>
+                      <span className="opacity-40">-</span>
+                      <span className="opacity-80">{score || "-"}</span>
+                    </span>
                   </span>
                   <span className="flex flex-col items-start leading-tight">
-                    <span className="opacity-90">
+                    <span className="text-lg opacity-90">
                       1 – {config.max.toLocaleString()}
                     </span>
                     <span className="opacity-60 text-sm">
-                      Score: x {config.scoreMultiplier.toFixed(1)}
-                    </span>
-                    <span className="opacity-60 text-sm">
-                      Best: {score ?? "-"}
+                      x {config.scoreMultiplier.toFixed(1)} score
                     </span>
                   </span>
                 </span>

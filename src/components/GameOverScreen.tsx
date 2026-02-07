@@ -1,18 +1,26 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef } from "react";
 
 interface GameOverScreenProps {
   score: number;
   isNewHighScore: boolean;
+  isWon: boolean;
   validNumbers: number[];
   onContinue: () => void;
 }
 
 function getGridConfig(count: number) {
-  if (count <= 5) return { cols: Math.max(count, 1), textSize: 'text-4xl md:text-5xl', scrolls: false };
-  if (count <= 10) return { cols: 2, textSize: 'text-3xl md:text-4xl', scrolls: false };
-  if (count <= 30) return { cols: 3, textSize: 'text-xl md:text-2xl', scrolls: false };
-  if (count <= 100) return { cols: 4, textSize: 'text-lg', scrolls: true };
-  return { cols: 5, textSize: 'text-base', scrolls: true };
+  if (count <= 5)
+    return {
+      cols: Math.max(count, 1),
+      textSize: "text-4xl md:text-5xl",
+      scrolls: false,
+    };
+  if (count <= 10)
+    return { cols: 2, textSize: "text-3xl md:text-4xl", scrolls: false };
+  if (count <= 30)
+    return { cols: 3, textSize: "text-xl md:text-2xl", scrolls: false };
+  if (count <= 100) return { cols: 4, textSize: "text-lg", scrolls: true };
+  return { cols: 5, textSize: "text-base", scrolls: true };
 }
 
 const AUTO_SCROLL_PX_PER_SEC = 50;
@@ -24,7 +32,9 @@ function useAutoScroll(enabled: boolean) {
   const lastTimeRef = useRef(0);
   const accumulatedRef = useRef(0);
   const userControlRef = useRef(false);
-  const resumeTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const resumeTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
   const directionRef = useRef<1 | -1>(1);
 
   useEffect(() => {
@@ -42,7 +52,8 @@ function useAutoScroll(enabled: boolean) {
         const dt = (time - lastTimeRef.current) / 1000;
         const maxScroll = el.scrollHeight - el.clientHeight;
         if (maxScroll > 0) {
-          accumulatedRef.current += AUTO_SCROLL_PX_PER_SEC * dt * directionRef.current;
+          accumulatedRef.current +=
+            AUTO_SCROLL_PX_PER_SEC * dt * directionRef.current;
           const step = Math.trunc(accumulatedRef.current);
           if (step !== 0) {
             accumulatedRef.current -= step;
@@ -89,25 +100,31 @@ function useAutoScroll(enabled: boolean) {
       scheduleResume();
     };
 
-    el.addEventListener('wheel', onWheel, { passive: true });
-    el.addEventListener('pointerdown', onInteractionStart);
-    el.addEventListener('pointerup', onInteractionEnd);
-    el.addEventListener('pointercancel', onInteractionEnd);
+    el.addEventListener("wheel", onWheel, { passive: true });
+    el.addEventListener("pointerdown", onInteractionStart);
+    el.addEventListener("pointerup", onInteractionEnd);
+    el.addEventListener("pointercancel", onInteractionEnd);
 
     return () => {
       cancelAnimationFrame(rafRef.current);
       clearTimeout(resumeTimerRef.current);
-      el.removeEventListener('wheel', onWheel);
-      el.removeEventListener('pointerdown', onInteractionStart);
-      el.removeEventListener('pointerup', onInteractionEnd);
-      el.removeEventListener('pointercancel', onInteractionEnd);
+      el.removeEventListener("wheel", onWheel);
+      el.removeEventListener("pointerdown", onInteractionStart);
+      el.removeEventListener("pointerup", onInteractionEnd);
+      el.removeEventListener("pointercancel", onInteractionEnd);
     };
   }, [enabled]);
 
   return containerRef;
 }
 
-export function GameOverScreen({ score, isNewHighScore, validNumbers, onContinue }: GameOverScreenProps) {
+export function GameOverScreen({
+  score,
+  isNewHighScore,
+  isWon,
+  validNumbers,
+  onContinue,
+}: GameOverScreenProps) {
   const count = validNumbers.length;
   const { cols, textSize, scrolls } = getGridConfig(count);
   const scrollRef = useAutoScroll(scrolls);
@@ -118,17 +135,25 @@ export function GameOverScreen({ score, isNewHighScore, validNumbers, onContinue
       <div className="text-center mb-4 animate-chalk-appear flex-shrink-0">
         <h1
           className="text-4xl md:text-5xl font-bold chalk-text-strong chalk-glow mb-2"
-          style={{ color: 'var(--chalk-yellow)' }}
+          style={{
+            color: isWon ? "var(--chalk-green)" : "var(--chalk-yellow)",
+          }}
         >
-          Game Over!
+          {isWon ? "That's the right number!" : "That's NOT the right number!"}
         </h1>
-        <p className="text-2xl md:text-3xl chalk-text">
-          Score: {score}
-        </p>
+        <p className="text-2xl md:text-3xl chalk-text">Score: {score}</p>
+        {isWon && (
+          <p
+            className="text-lg md:text-xl font-bold chalk-glow mt-1"
+            style={{ color: "var(--chalk-yellow)" }}
+          >
+            Win Bonus: x1.5
+          </p>
+        )}
         {isNewHighScore && (
           <p
             className="text-lg md:text-xl font-bold chalk-glow mt-1 animate-pulse"
-            style={{ color: 'var(--chalk-green)' }}
+            style={{ color: "var(--chalk-green)" }}
           >
             New High Score!
           </p>
@@ -139,15 +164,15 @@ export function GameOverScreen({ score, isNewHighScore, validNumbers, onContinue
       <div className="text-center mb-3 flex-shrink-0">
         {count === 0 ? (
           <p className="text-lg chalk-text opacity-80">
-            No valid numbers remained — truly impossible!
+            Turned out to be none of the numbers known to man — truly
+            impossible! We might call it a bug, but let's just say you found a
+            secret ending. Congrats?
           </p>
         ) : count === 1 ? (
-          <p className="text-lg chalk-text opacity-80">
-            Only 1 valid number remained:
-          </p>
+          <p className="text-lg chalk-text opacity-80">Well, there it is:</p>
         ) : (
           <p className="text-lg chalk-text opacity-80">
-            {count.toLocaleString()} valid numbers remained:
+            ..it could have been any of these {count.toLocaleString()} numbers:
           </p>
         )}
       </div>
@@ -156,17 +181,14 @@ export function GameOverScreen({ score, isNewHighScore, validNumbers, onContinue
       {count > 0 && (
         <div
           ref={scrollRef}
-          className={`w-full max-w-lg ${scrolls ? 'flex-1 overflow-y-auto chalk-scroll min-h-0' : ''} mb-4`}
+          className={`w-full max-w-lg ${scrolls ? "flex-1 overflow-y-auto chalk-scroll min-h-0" : ""} mb-4`}
         >
           <div
             className="grid gap-2 justify-items-center"
             style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
           >
             {validNumbers.map((n) => (
-              <span
-                key={n}
-                className={`${textSize} chalk-text font-bold`}
-              >
+              <span key={n} className={`${textSize} chalk-text font-bold`}>
                 {n.toLocaleString()}
               </span>
             ))}
