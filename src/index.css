@@ -1,9 +1,9 @@
 @import "tailwindcss";
 
 :root {
-  /* Chalkboard colors - classic school green */
-  --chalkboard-bg: #2a3c2a;
-  --chalkboard-light: #354435;
+  /* Chalkboard colors - dark charcoal blackboard */
+  --chalkboard-bg: #2b2b2b;
+  --chalkboard-light: #353535;
   --chalk-white: #e8e8d8;
   --chalk-white-dim: rgba(232, 232, 216, 0.6);
   --chalk-green: #7cb987;
@@ -30,14 +30,20 @@ body::before {
   pointer-events: none;
   z-index: 0;
   background:
-    /* Chalk dust smudges - horizontal swipes */
-    radial-gradient(ellipse 200px 15px at 20% 25%, rgba(255, 255, 255, 0.04) 0%, transparent 100%),
-    radial-gradient(ellipse 300px 20px at 70% 18%, rgba(255, 255, 255, 0.03) 0%, transparent 100%),
-    radial-gradient(ellipse 250px 18px at 45% 72%, rgba(255, 255, 255, 0.035) 0%, transparent 100%),
-    radial-gradient(ellipse 180px 12px at 80% 55%, rgba(255, 255, 255, 0.025) 0%, transparent 100%),
-    radial-gradient(ellipse 220px 15px at 15% 80%, rgba(255, 255, 255, 0.03) 0%, transparent 100%),
+    /* Faint chalk dust smudges - horizontal eraser streaks */
+    radial-gradient(ellipse 350px 8px at 15% 20%, rgba(255, 255, 255, 0.025) 0%, transparent 100%),
+    radial-gradient(ellipse 280px 6px at 60% 15%, rgba(255, 255, 255, 0.02) 0%, transparent 100%),
+    radial-gradient(ellipse 400px 10px at 40% 35%, rgba(255, 255, 255, 0.03) 0%, transparent 100%),
+    radial-gradient(ellipse 320px 7px at 75% 42%, rgba(255, 255, 255, 0.02) 0%, transparent 100%),
+    radial-gradient(ellipse 250px 5px at 25% 55%, rgba(255, 255, 255, 0.02) 0%, transparent 100%),
+    radial-gradient(ellipse 380px 9px at 55% 65%, rgba(255, 255, 255, 0.025) 0%, transparent 100%),
+    radial-gradient(ellipse 300px 6px at 80% 75%, rgba(255, 255, 255, 0.02) 0%, transparent 100%),
+    radial-gradient(ellipse 260px 8px at 10% 85%, rgba(255, 255, 255, 0.02) 0%, transparent 100%),
+    /* Subtle ghostly smudge patches - wiped chalk residue */
+    radial-gradient(ellipse 200px 120px at 30% 30%, rgba(200, 200, 190, 0.015) 0%, transparent 100%),
+    radial-gradient(ellipse 250px 150px at 70% 60%, rgba(200, 200, 190, 0.012) 0%, transparent 100%),
     /* Vignette - darker edges */
-    radial-gradient(ellipse 80% 80% at 50% 50%, transparent 0%, rgba(0, 0, 0, 0.4) 100%);
+    radial-gradient(ellipse 70% 70% at 50% 50%, transparent 0%, rgba(0, 0, 0, 0.55) 100%);
   filter: url(#chalkboard-noise);
 }
 
