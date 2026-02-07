@@ -4,6 +4,7 @@ import { TestList } from './components/TestList';
 import { ScoreDisplay } from './components/ScoreDisplay';
 import { WelcomeScreen } from './components/WelcomeScreen';
 import { GameOverScreen } from './components/GameOverScreen';
+import { Countdown } from './components/Countdown';
 import { useGameState } from './hooks/useGameState';
 import { useScoreTimer } from './hooks/useScoreTimer';
 import { useHighScoreStore } from './stores/highScoreStore';
@@ -14,6 +15,7 @@ import type { Test } from './engine/types';
 
 function App() {
   const [showWelcome, setShowWelcome] = useState(true);
+  const [showCountdown, setShowCountdown] = useState(false);
   const [showGameOver, setShowGameOver] = useState(false);
   const [gameOverData, setGameOverData] = useState<{
     score: number; difficulty: Difficulty; isNewHighScore: boolean; validNumbers: number[];
@@ -78,10 +80,15 @@ function App() {
       totalScoreRef.current = 0;
       resetGame(difficulty);
       setShowWelcome(false);
-      startTimer(0);
+      setShowCountdown(true);
     },
-    [resetGame, startTimer]
+    [resetGame]
   );
+
+  const handleCountdownComplete = useCallback(() => {
+    setShowCountdown(false);
+    startTimer(0);
+  }, [startTimer]);
 
   const handleSubmit = useCallback(
     (input: string) => {
@@ -148,6 +155,8 @@ function App() {
 
   return (
     <div className="flex flex-col h-[100dvh]">
+      {showCountdown && <Countdown onComplete={handleCountdownComplete} />}
+
       {/* Middle: Scrollable rules list */}
       <main className="flex-1 overflow-y-auto p-3 flex flex-col items-center justify-end">
         <TestList
@@ -170,7 +179,7 @@ function App() {
           </div>
           <NumberInput
             onSubmit={handleSubmit}
-            disabled={gameState.isGameOver}
+            disabled={gameState.isGameOver || showCountdown}
             maxDigits={config.maxDigits}
           />
         </div>
