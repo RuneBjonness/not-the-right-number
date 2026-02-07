@@ -79,7 +79,7 @@ export function NumberInput({ onSubmit, disabled = false, maxDigits = 6 }: Numbe
   };
 
   return (
-    <div className="calculator-panel">
+    <div className="calculator-panel" data-tutorial="input">
       {/* Display */}
       <div className="calc-display">
         <span className="calc-display-previous">

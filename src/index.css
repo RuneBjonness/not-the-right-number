@@ -336,3 +336,14 @@ body > * {
   scrollbar-width: thin;
   scrollbar-color: rgba(232, 232, 216, 0.25) transparent;
 }
+
+/* Tutorial overlay */
+.tutorial-card {
+  background: rgba(30, 30, 30, 0.95);
+  border: 2px dashed var(--chalk-white-dim);
+  border-radius: 8px;
+  padding: 1.25rem 1.5rem;
+  max-width: 320px;
+  width: calc(100vw - 2rem);
+  z-index: 51;
+}

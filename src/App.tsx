@@ -4,6 +4,7 @@ import { TestList } from './components/TestList';
 import { ScoreDisplay } from './components/ScoreDisplay';
 import { WelcomeScreen } from './components/WelcomeScreen';
 import { GameOverScreen } from './components/GameOverScreen';
+import { TutorialScreen } from './components/TutorialScreen';
 import { Countdown } from './components/Countdown';
 import { useGameState } from './hooks/useGameState';
 import { useScoreTimer } from './hooks/useScoreTimer';
@@ -15,6 +16,7 @@ import type { Test } from './engine/types';
 
 function App() {
   const [showWelcome, setShowWelcome] = useState(true);
+  const [showTutorial, setShowTutorial] = useState(false);
   const [showCountdown, setShowCountdown] = useState(false);
   const [showGameOver, setShowGameOver] = useState(false);
   const [gameOverData, setGameOverData] = useState<{
@@ -93,6 +95,16 @@ function App() {
     startTimer(0);
   }, [startTimer]);
 
+  const handleStartTutorial = useCallback(() => {
+    setShowWelcome(false);
+    setShowTutorial(true);
+  }, []);
+
+  const handleReturnFromTutorial = useCallback(() => {
+    setShowTutorial(false);
+    setShowWelcome(true);
+  }, []);
+
   const handleSubmit = useCallback(
     (input: string) => {
       const result = submitInput(input);
@@ -144,10 +156,15 @@ function App() {
     );
   }
 
+  if (showTutorial) {
+    return <TutorialScreen onReturn={handleReturnFromTutorial} />;
+  }
+
   if (showWelcome) {
     return (
       <WelcomeScreen
         onStart={handleStartGame}
+        onStartTutorial={handleStartTutorial}
         highScores={highScores}
         solved={solved}
         lastScore={lastScore}

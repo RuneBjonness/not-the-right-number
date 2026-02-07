@@ -14,7 +14,7 @@ export function ScoreDisplay({
   validCount,
 }: ScoreDisplayProps) {
   return (
-    <div className="flex items-center gap-5">
+    <div className="flex items-center gap-5" data-tutorial="score">
       <span className="text-m chalk-text opacity-80">Best: {highScore}</span>
       <span
         className="text-lg font-bold chalk-glow"

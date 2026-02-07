@@ -5,6 +5,7 @@ import { BrainIcon } from "./BrainIcon";
 
 interface WelcomeScreenProps {
   onStart: (difficulty: Difficulty) => void;
+  onStartTutorial: () => void;
   highScores: { easy: number; normal: number; hard: number };
   solved: { easy: boolean; normal: boolean; hard: boolean };
   lastScore?: number;
@@ -22,6 +23,7 @@ const filledBrains: Record<Difficulty, number> = {
 
 export function WelcomeScreen({
   onStart,
+  onStartTutorial,
   highScores,
   solved,
   lastScore,
@@ -127,23 +129,15 @@ export function WelcomeScreen({
         </div>
       )}
 
-      {/* How to play (hidden when returning from a game) */}
+      {/* How to play link (hidden when returning from a game) */}
       {!isReturning && (
         <div
-          className={`max-w-md text-center transition-opacity duration-500 ${
+          className={`text-center transition-opacity duration-500 ${
             showContent ? "opacity-100" : "opacity-0"
           }`}
         >
-          <h2
-            className="text-xl md:text-2xl chalk-text mb-4"
-            style={{ color: "var(--chalk-yellow)" }}
-          >
-            How to play
-          </h2>
           <p className="text-base md:text-lg chalk-text opacity-80 leading-relaxed">
-            Enter numbers that satisfy all the rules. Each time you find the
-            right number, a new rule is added that your current number breaks.
-            How many rules can you beat?
+            I'm thinking of a number. You'll never guess it though
           </p>
         </div>
       )}
@@ -209,12 +203,20 @@ export function WelcomeScreen({
         </div>
       </div>
 
-      {/* Start / Play Again button */}
+      {/* How to play link + Start / Play Again button */}
       <div
-        className={`mt-8 transition-opacity duration-500 ${
+        className={`mt-8 flex flex-col items-center gap-3 transition-opacity duration-500 ${
           showButton ? "opacity-100" : "opacity-0"
         }`}
       >
+        <button
+          onClick={onStartTutorial}
+          className="chalk-text text-base underline opacity-50 hover:opacity-90 transition-opacity"
+          style={{ color: "var(--chalk-blue)" }}
+          tabIndex={showButton ? 0 : -1}
+        >
+          How to play
+        </button>
         <button
           onClick={() => onStart(selectedDifficulty)}
           className="chalk-button chalk-button-start text-2xl px-12 py-4"

@@ -42,7 +42,7 @@ export function TestList({ activeTests, testResults, levelScores, potentialPoint
   const lastIndex = activeTests.length - 1;
 
   return (
-    <div className="w-full max-w-sm">
+    <div className="w-full max-w-sm" data-tutorial="rules">
       <div className="space-y-1">
         {activeTests.map((test, index) => {
           const status = getTestStatus(test.id);
