@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Chalkboard background -->
+  <rect width="64" height="64" rx="8" fill="#2a3c2a"/>
+
+  <!-- Chalk number "5" -->
+  <text x="32" y="54" text-anchor="middle" font-family="serif" font-weight="bold" font-size="58" fill="#e8e8d8" opacity="0.9">5</text>
+
+  <!-- Red chalk diagonal line -->
+  <line x1="54" y1="10" x2="10" y2="54" stroke="#e07a7a" stroke-width="6" stroke-linecap="round" opacity="0.9"/>
+</svg>

@@ -26,95 +26,77 @@ npm run test         # Run tests (if configured)
 
 ## Game Architecture
 
+### App Flow
+
+Welcome Screen → (optional Tutorial) → Countdown → Game → Game Over → back to Welcome
+
+Additional overlays: Tutorial (step-by-step walkthrough), Incoming Challenge modal (URL-based)
+
 ### Core Game Loop
 
-1. Player enters a number
-2. Number is validated against all active tests
-3. If all tests pass: select a new test from the pool that the current input fails, add it to active tests
-4. If any test fails: display which tests failed
-5. Game ends when player gives up; score = number of tests passed
+1. Player picks a difficulty (Easy/Normal/Hard) and starts the game
+2. A 3-2-1 countdown plays, then the scoring timer begins
+3. Player enters a number; it's validated against all active rules
+4. If all rules pass: a new rule is selected that the current input fails
+5. If any rule fails: failed rules are highlighted
+6. Reaching the win threshold triggers a "Must be X" final rule; solving it wins the game
+7. Player can give up at any time; final score is shown on the game-over screen
 
-### Test System
+### Difficulty System (`src/engine/difficulty.ts`)
 
-The base rule constrains all numbers to integers 1–999,999. Tests are organized by tier:
+| Level  | Range      | Win at | Multiplier |
+|--------|-----------|--------|------------|
+| Easy   | 1–999     | 4 rules | 1x        |
+| Normal | 1–9,999   | 10 rules | 1.5x     |
+| Hard   | 1–999,999 | 25 rules | 2x       |
 
-**Early Game (Basic Properties)** — ~17 rules
+Each difficulty excludes rules that don't make sense for its range.
 
-- Even/odd, parity of last digit
-- Greater/less than thresholds
-- Divisibility rules (3, 5, 7, 11, NOT 4)
-- Digit count constraints
+### Scoring (`src/engine/scoring.ts`, `src/hooks/useScoreTimer.ts`)
 
-**Mid Game (Mathematical & Digit-based)** — ~20 rules
+- Base points per level: `20 + level × 10`, decaying over time
+- Wrong-answer penalty: points halved
+- Difficulty bonus based on constraint elimination ratio
+- Win bonus: 1.5x on final score
 
-- Prime numbers, perfect squares, Harshad numbers
-- Digit sum requirements (even/odd, divisible by 3, > 10)
-- Contains/excludes specific digits, palindrome, no repeating digits
-- Consecutive digits, repeated pairs, digit product, first-digit constraints
-- Exact digit count (3, 4, or 5 digits)
+### Test System (`src/engine/tests.ts`)
 
-**Late Game (Complex Constraints)** — ~10 rules
+~47 rules in three tiers (EARLY → MID at 5 rules → LATE at 10 rules). The fairness engine (`src/engine/gameEngine.ts`, `src/engine/ruleCompatibility.ts`) ensures every new rule leaves valid answers by scanning the number range, rejecting incompatible rule pairs, and preferring rules that keep the game playable.
 
-- Fibonacci, triangular, perfect cube, power of 2
-- Ascending/descending digits, alternating parity
-- First = last digit, all-prime digits, first+last > 10
+### Key Source Files
 
-### Key Components
+**Engine:**
+- `src/engine/gameEngine.ts` — Rule validation, selection, fairness scoring
+- `src/engine/tests.ts` — Rule definitions by tier
+- `src/engine/ruleCompatibility.ts` — Exclusion pairs, valid-number counting/caching
+- `src/engine/difficulty.ts` — Difficulty config (ranges, multipliers, win thresholds)
+- `src/engine/scoring.ts` — Point calculations
+- `src/engine/types.ts` — Core TypeScript types
+- `src/engine/bragCodec.ts` — Encode/decode challenge URLs
 
-- `src/components/NumberInput.tsx`: Calculator-style input with 6-digit limit
-- `src/components/TestList.tsx`: Stacked list showing all active tests with pass/fail indicators
-- `src/engine/gameEngine.ts`: Core logic for validating input and selecting new tests
-- `src/engine/tests.ts`: ~47 test definitions organized by tier (EARLY, MID, LATE)
-- `src/engine/ruleCompatibility.ts`: Exclusion pairs and valid-number counting
-- `src/engine/types.ts`: TypeScript types for Test, GameState, TestResult
-- `src/hooks/useGameState.ts`: Game state management hook
+**Components:**
+- `src/App.tsx` — Screen routing and state orchestration
+- `src/components/WelcomeScreen.tsx` — Difficulty picker, high scores, animated title
+- `src/components/NumberInput.tsx` — Calculator-style input
+- `src/components/TestList.tsx` — Active rules with pass/fail indicators
+- `src/components/ScoreDisplay.tsx` — Live score and timer
+- `src/components/GameOverScreen.tsx` — Results, remaining valid numbers grid
+- `src/components/BragScreen.tsx` — Share scores, manage challenges
+- `src/components/IncomingChallengeModal.tsx` — Compare scores from a challenge URL
+- `src/components/TutorialOverlay.tsx` — Step-by-step tutorial overlay
+- `src/components/Countdown.tsx` — 3-2-1 animated countdown
 
-### Test Selection Strategy (Fairness Engine)
-
-When adding a new test, the engine:
-
-1. Filters available tests to those the current input fails
-2. Applies tier progression (EARLY → MID at 5 rules → LATE at 10 rules)
-3. Rejects rules that violate exclusion pairs (e.g., even+odd, prime+even)
-4. **Single-pass scoring:** scans 1–999,999 once to count how many valid answers remain for each candidate rule
-5. Rejects any candidate that would leave 0 valid numbers (impossible state)
-6. Prefers candidates from the upper half by valid count (keeps game playable)
-7. Shows remaining valid-number count to the player
+**State:**
+- `src/hooks/useGameState.ts` — Game state management
+- `src/hooks/useScoreTimer.ts` — Time-based scoring hook
+- `src/stores/highScoreStore.ts` — Per-difficulty high scores and solved status (Zustand + localStorage)
+- `src/stores/bragStore.ts` — Player name and saved challenges (Zustand + localStorage)
+- `src/tutorial/tutorialSteps.ts` — Tutorial step definitions
 
 ## Visual Theme
 
-The game uses a **classroom blackboard** inspired aesthetic with realistic chalk text effects.
+Dark charcoal chalkboard aesthetic with chalk text effects. SVG filters (`#chalk`, `#chalk-strong`) in `index.html` create the grainy/dusty look. Font: "Indie Flower" (Google Fonts).
 
-### Chalkboard Background
-- Dark green base color (`#2a3c2a`)
-- SVG fractal noise filter for grainy surface texture
-- Chalk dust smudges (horizontal swipes like eraser marks)
-- Vignette effect darkening the edges
+**CSS classes:** `.chalk-text`, `.chalk-text-strong`, `.chalk-glow`, `.chalk-input`, `.chalk-button`
 
-### Chalk Text Effects
-Implemented via SVG filters in `index.html`:
-
-- **`#chalk`** (body text, input, buttons): Grainy texture, softened edges, subtle dust halo
-- **`#chalk-strong`** (headers, score): Edge displacement for wobble, harsher grain, larger glow
-
-Chalk text characteristics replicated:
-- Grainy, dusty appearance (not solid color)
-- Soft/fuzzy edges with dust halo
-- Slight wobble/imperfection on large text
-- Off-white color (`#e8e8d8`)
-
-### CSS Classes
-- `.chalk-text` - Standard chalk effect for body text
-- `.chalk-text-strong` - Pronounced effect for headers
-- `.chalk-glow` - Extra glow for score/emphasis
-- `.chalk-input` - Large chalky input field
-- `.chalk-button` - Dashed border, chalk-filtered buttons
-
-### Typography
-- **Font:** "Indie Flower" (Google Fonts) - handwritten style
-- **Colors:**
-  - Chalk white: `#e8e8d8`
-  - Chalk green (pass): `#7cb987`
-  - Chalk red (fail): `#e07a7a`
-  - Chalk yellow (score): `#e8d174`
-  - Chalk blue (primary actions): `#7ab8d4`
+**Color palette:** white `#e8e8d8`, green/pass `#7cb987`, red/fail `#e07a7a`, yellow/score `#e8d174`, blue/action `#7ab8d4`
