@@ -124,6 +124,8 @@ export function TutorialScreen({ onReturn }: TutorialScreenProps) {
               highScore={0}
               totalScore={gameState.score}
               validCount={gameState.validCount}
+              potentialPoints={20}
+              secondsLeft={30}
             />
           </div>
           <NumberInput

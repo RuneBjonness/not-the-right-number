@@ -156,6 +156,7 @@ function App() {
 
   const {
     potentialPoints,
+    setInitialPoints,
     startTimer,
     stopTimer,
     applyPenalty,
@@ -167,10 +168,11 @@ function App() {
       gameEndedRef.current = false;
       totalScoreRef.current = 0;
       resetGame(difficulty);
+      setInitialPoints(0);
       setShowWelcome(false);
       setShowCountdown(true);
     },
-    [resetGame],
+    [resetGame, setInitialPoints],
   );
 
   const handleCountdownComplete = useCallback(() => {
@@ -320,6 +322,9 @@ function App() {
   }
 
   const config = getDifficultyConfig(gameState.difficulty);
+  const displayPoints = gameState.isGameOver
+    ? 0
+    : Math.round(potentialPoints * config.scoreMultiplier);
 
   return (
     <div className="flex flex-col h-[100dvh]">
@@ -331,28 +336,27 @@ function App() {
           activeTests={gameState.activeTests}
           testResults={testResults}
           levelScores={gameState.levelScores}
-          potentialPoints={
-            gameState.isGameOver
-              ? 0
-              : Math.round(potentialPoints * config.scoreMultiplier)
-          }
+          potentialPoints={displayPoints}
         />
       </main>
 
       {/* Bottom: Score + numpad */}
       <footer className="flex-shrink-0">
         <div className="max-w-sm mx-auto px-3">
-          <div className="flex items-center justify-center py-1.5 border-t border-[var(--chalk-white-dim)]">
+          <div className="flex flex-col items-center py-1.5 border-t border-[var(--chalk-white-dim)]">
             <ScoreDisplay
               highScore={getHighScore(gameState.difficulty)}
               totalScore={gameState.score}
               validCount={gameState.validCount}
+              potentialPoints={displayPoints}
+              secondsLeft={gameState.isGameOver ? 0 : potentialPoints}
             />
           </div>
           <NumberInput
             onSubmit={handleSubmit}
             disabled={gameState.isGameOver || showCountdown}
             maxDigits={config.maxDigits}
+            lowTime={!gameState.isGameOver && !showCountdown && potentialPoints <= 5}
           />
         </div>
       </footer>

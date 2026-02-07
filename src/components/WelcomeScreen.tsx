@@ -233,7 +233,7 @@ export function WelcomeScreen({
             style={{ color: "var(--chalk-yellow)" }}
             tabIndex={showButton ? 0 : -1}
           >
-            Brag &amp; Challenges
+            Brag &amp; Challenge
           </button>
         </div>
         <button

@@ -7,6 +7,7 @@ import {
 export interface UseScoreTimerReturn {
   potentialPoints: number;
   isRunning: boolean;
+  setInitialPoints: (level: number) => void;
   startTimer: (level: number) => void;
   stopTimer: () => void;
   applyPenalty: () => void;
@@ -33,6 +34,10 @@ export function useScoreTimer(
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
+  }, []);
+
+  const setInitialPoints = useCallback((level: number) => {
+    setPotentialPoints(calculateLevelStartingPoints(level));
   }, []);
 
   const startTimer = useCallback(
@@ -93,6 +98,7 @@ export function useScoreTimer(
   return {
     potentialPoints,
     isRunning,
+    setInitialPoints,
     startTimer,
     stopTimer,
     applyPenalty,

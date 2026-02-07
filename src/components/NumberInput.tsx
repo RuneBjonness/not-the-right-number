@@ -4,9 +4,10 @@ interface NumberInputProps {
   onSubmit: (value: string) => void;
   disabled?: boolean;
   maxDigits?: number;
+  lowTime?: boolean;
 }
 
-export function NumberInput({ onSubmit, disabled = false, maxDigits = 6 }: NumberInputProps) {
+export function NumberInput({ onSubmit, disabled = false, maxDigits = 6, lowTime = false }: NumberInputProps) {
   const [value, setValue] = useState('');
   const [lastSubmitted, setLastSubmitted] = useState('');
 
@@ -74,7 +75,7 @@ export function NumberInput({ onSubmit, disabled = false, maxDigits = 6 }: Numbe
 
   const getButtonClass = (btn: string) => {
     if (btn === 'C') return 'calc-button calc-button-clear';
-    if (btn === '=') return 'calc-button calc-button-submit';
+    if (btn === '=') return `calc-button calc-button-submit${lowTime ? ' calc-button-submit-urgent' : ''}`;
     return 'calc-button';
   };
 
