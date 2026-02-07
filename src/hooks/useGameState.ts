@@ -40,6 +40,7 @@ function createInitialState(difficulty: Difficulty): GameState {
     level: 0,
     levelScores: [],
     validCount: config.max - config.min + 1,
+    validNumbers: null,
     difficulty,
     finalRuleTarget: null,
   };
@@ -90,7 +91,8 @@ export function useGameState(): UseGameStateReturn {
           gameState.availableTests,
           config.min,
           config.max,
-          config.winThreshold
+          config.winThreshold,
+          gameState.validNumbers
         );
 
         if (result) {
@@ -102,11 +104,12 @@ export function useGameState(): UseGameStateReturn {
             currentInput: input,
             level: newLevel,
             validCount: result.validCount,
+            validNumbers: result.validNumbers,
           }));
           return { type: 'passed', newLevel };
         } else {
           // No more rules can be added — create a "Must be X" final rule
-          const validNumbers = collectValidNumbers(gameState.activeTests, config.min, config.max);
+          const validNumbers = gameState.validNumbers ?? collectValidNumbers(gameState.activeTests, config.min, config.max);
           const candidates = validNumbers.filter((n) => n !== value);
           if (candidates.length === 0) {
             // Edge case: only the current number is valid, player wins immediately
@@ -115,6 +118,7 @@ export function useGameState(): UseGameStateReturn {
               isWon: true,
               isGameOver: true,
               currentInput: input,
+              validNumbers: [],
             }));
             return { type: 'won' };
           }
@@ -133,6 +137,7 @@ export function useGameState(): UseGameStateReturn {
             currentInput: input,
             level: newLevel,
             validCount: 1,
+            validNumbers: [target],
             finalRuleTarget: target,
           }));
           return { type: 'passed', newLevel };

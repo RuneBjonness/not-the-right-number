@@ -31,6 +31,7 @@ export interface GameState {
   level: number;
   levelScores: number[];
   validCount: number;
+  validNumbers: number[] | null;
   difficulty: Difficulty;
   finalRuleTarget: number | null;
 }

@@ -5,6 +5,7 @@ interface GameOverScreenProps {
   isNewHighScore: boolean;
   isWon: boolean;
   validNumbers: number[];
+  validCount: number;
   onContinue: () => void;
 }
 
@@ -123,10 +124,13 @@ export function GameOverScreen({
   isNewHighScore,
   isWon,
   validNumbers,
+  validCount,
   onContinue,
 }: GameOverScreenProps) {
-  const count = validNumbers.length;
-  const { cols, textSize, scrolls } = getGridConfig(count);
+  const count = validCount;
+  const displayCount = validNumbers.length;
+  const isTruncated = displayCount < count;
+  const { cols, textSize, scrolls } = getGridConfig(displayCount);
   const scrollRef = useAutoScroll(scrolls);
 
   return (
@@ -192,6 +196,11 @@ export function GameOverScreen({
                 {n.toLocaleString()}
               </span>
             ))}
+            {isTruncated && (
+              <span className={`${textSize} chalk-text font-bold opacity-50 col-span-full text-center`}>
+                ...and {(count - displayCount).toLocaleString()} more
+              </span>
+            )}
           </div>
         </div>
       )}

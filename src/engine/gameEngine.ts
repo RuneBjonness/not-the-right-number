@@ -26,33 +26,57 @@ interface CandidateScore {
   validCount: number;
 }
 
+interface ScoredResult {
+  scored: CandidateScore[];
+  validNumbers: number[];
+}
+
 /**
- * Single-pass scoring: scan [min, max] once,
+ * Single-pass scoring: scan valid numbers once,
  * and for every number that passes all active rules, check which
  * candidates it also passes.
+ *
+ * When cachedValidNumbers is provided, skips the active-test check
+ * entirely (the cache already contains only numbers passing active tests).
  */
 function scoreCandidates(
   activeTests: Test[],
   candidates: Test[],
   min: number,
   max: number,
-  minValidCount: number = 1
-): CandidateScore[] {
+  minValidCount: number = 1,
+  cachedValidNumbers?: number[] | null
+): ScoredResult {
   const counts = new Array<number>(candidates.length).fill(0);
+  let validNumbers: number[];
 
-  for (let n = min; n <= max; n++) {
-    let passesActive = true;
-    for (let r = 0; r < activeTests.length; r++) {
-      if (!activeTests[r].validate(n)) {
-        passesActive = false;
-        break;
+  if (cachedValidNumbers) {
+    validNumbers = cachedValidNumbers;
+    for (let i = 0; i < validNumbers.length; i++) {
+      const n = validNumbers[i];
+      for (let c = 0; c < candidates.length; c++) {
+        if (candidates[c].validate(n)) {
+          counts[c]++;
+        }
       }
     }
-    if (!passesActive) continue;
+  } else {
+    validNumbers = [];
+    for (let n = min; n <= max; n++) {
+      let passesActive = true;
+      for (let r = 0; r < activeTests.length; r++) {
+        if (!activeTests[r].validate(n)) {
+          passesActive = false;
+          break;
+        }
+      }
+      if (!passesActive) continue;
 
-    for (let c = 0; c < candidates.length; c++) {
-      if (candidates[c].validate(n)) {
-        counts[c]++;
+      validNumbers.push(n);
+      for (let c = 0; c < candidates.length; c++) {
+        if (candidates[c].validate(n)) {
+          counts[c]++;
+        }
       }
     }
   }
@@ -63,7 +87,7 @@ function scoreCandidates(
       scored.push({ test: candidates[c], validCount: counts[c] });
     }
   }
-  return scored;
+  return { scored, validNumbers };
 }
 
 export function selectNextTest(
@@ -72,8 +96,9 @@ export function selectNextTest(
   availableTests: Test[],
   min: number,
   max: number,
-  minValidCount: number = 1
-): { test: Test; validCount: number } | null {
+  minValidCount: number = 1,
+  cachedValidNumbers?: number[] | null
+): { test: Test; validCount: number; validNumbers: number[] } | null {
   const failingTests = availableTests.filter((test) => !test.validate(currentValue));
   if (failingTests.length === 0) return null;
 
@@ -93,7 +118,7 @@ export function selectNextTest(
 
   if (eligible.length === 0) return null;
 
-  const scored = scoreCandidates(activeTests, eligible, min, max, minValidCount);
+  const { scored, validNumbers } = scoreCandidates(activeTests, eligible, min, max, minValidCount, cachedValidNumbers);
 
   if (scored.length === 0) return null;
 
@@ -108,5 +133,8 @@ export function selectNextTest(
   const pool = preferred.length > 0 ? preferred : upperHalf;
   const pick = pool[Math.floor(Math.random() * pool.length)];
 
-  return { test: pick.test, validCount: pick.validCount };
+  // Filter cached valid numbers to those passing the new test
+  const newValidNumbers = validNumbers.filter(n => pick.test.validate(n));
+
+  return { test: pick.test, validCount: pick.validCount, validNumbers: newValidNumbers };
 }

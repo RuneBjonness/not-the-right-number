@@ -48,8 +48,9 @@ export function countValidNumbers(rules: Test[], min: number, max: number): numb
 
 /**
  * Collects all integers in [min, max] that satisfy ALL given rules.
+ * When limit is provided, stops early once that many results are found.
  */
-export function collectValidNumbers(rules: Test[], min: number, max: number): number[] {
+export function collectValidNumbers(rules: Test[], min: number, max: number, limit?: number): number[] {
   const result: number[] = [];
   for (let n = min; n <= max; n++) {
     let valid = true;
@@ -59,7 +60,10 @@ export function collectValidNumbers(rules: Test[], min: number, max: number): nu
         break;
       }
     }
-    if (valid) result.push(n);
+    if (valid) {
+      result.push(n);
+      if (limit !== undefined && result.length >= limit) break;
+    }
   }
   return result;
 }
