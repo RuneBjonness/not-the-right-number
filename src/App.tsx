@@ -5,10 +5,15 @@ import { ScoreDisplay } from "./components/ScoreDisplay";
 import { WelcomeScreen } from "./components/WelcomeScreen";
 import { GameOverScreen } from "./components/GameOverScreen";
 import { TutorialScreen } from "./components/TutorialScreen";
+import { BragScreen } from "./components/BragScreen";
+import { IncomingChallengeModal } from "./components/IncomingChallengeModal";
 import { Countdown } from "./components/Countdown";
 import { useGameState } from "./hooks/useGameState";
 import { useScoreTimer } from "./hooks/useScoreTimer";
 import { useHighScoreStore } from "./stores/highScoreStore";
+import { useBragStore } from "./stores/bragStore";
+import { decodeBrag } from "./engine/bragCodec";
+import type { Challenge } from "./engine/bragCodec";
 import { collectValidNumbers } from "./engine/ruleCompatibility";
 import type { Difficulty } from "./engine/difficulty";
 import { getDifficultyConfig } from "./engine/difficulty";
@@ -17,6 +22,17 @@ import type { Test } from "./engine/types";
 function App() {
   const [showWelcome, setShowWelcome] = useState(true);
   const [showTutorial, setShowTutorial] = useState(false);
+  const [showBrag, setShowBrag] = useState(false);
+  const [skipWelcomeAnim, setSkipWelcomeAnim] = useState(false);
+  const [incomingChallenge, setIncomingChallenge] = useState<Challenge | null>(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('c');
+    if (code) {
+      window.history.replaceState({}, '', window.location.pathname);
+      return decodeBrag(code);
+    }
+    return null;
+  });
   const [showCountdown, setShowCountdown] = useState(false);
   const [showGameOver, setShowGameOver] = useState(false);
   const [gameOverData, setGameOverData] = useState<{
@@ -40,6 +56,15 @@ function App() {
     checkAndUpdateHighScore,
     markSolved,
   } = useHighScoreStore();
+  const {
+    playerName,
+    challenges,
+    setPlayerName,
+    addChallenge,
+    removeChallenge,
+    hasChallenge,
+  } = useBragStore();
+
   const {
     gameState,
     testResults,
@@ -163,6 +188,29 @@ function App() {
     setShowWelcome(true);
   }, []);
 
+  const handleShowBrag = useCallback(() => {
+    setShowWelcome(false);
+    setShowBrag(true);
+  }, []);
+
+  const handleReturnFromBrag = useCallback(() => {
+    setShowBrag(false);
+    setSkipWelcomeAnim(true);
+    setShowWelcome(true);
+  }, []);
+
+  const handleAcceptChallenge = useCallback(
+    (challenge: Challenge) => {
+      addChallenge(challenge);
+      setIncomingChallenge(null);
+    },
+    [addChallenge],
+  );
+
+  const handleDismissChallenge = useCallback(() => {
+    setIncomingChallenge(null);
+  }, []);
+
   const handleSubmit = useCallback(
     (input: string) => {
       const result = submitInput(input);
@@ -228,18 +276,46 @@ function App() {
     return <TutorialScreen onReturn={handleReturnFromTutorial} />;
   }
 
-  if (showWelcome) {
+  if (showBrag) {
     return (
-      <WelcomeScreen
-        onStart={handleStartGame}
-        onStartTutorial={handleStartTutorial}
+      <BragScreen
         highScores={highScores}
         solved={solved}
-        lastScore={lastScore}
-        lastDifficulty={lastDifficulty}
-        isNewHighScore={isNewHighScore}
-        lastIsWon={lastIsWon}
+        playerName={playerName}
+        onSetPlayerName={setPlayerName}
+        onReturn={handleReturnFromBrag}
+        challenges={challenges}
+        onRemoveChallenge={removeChallenge}
       />
+    );
+  }
+
+  if (showWelcome) {
+    return (
+      <>
+        <WelcomeScreen
+          onStart={handleStartGame}
+          onStartTutorial={handleStartTutorial}
+          onShowBrag={handleShowBrag}
+          highScores={highScores}
+          solved={solved}
+          lastScore={lastScore}
+          lastDifficulty={lastDifficulty}
+          isNewHighScore={isNewHighScore}
+          lastIsWon={lastIsWon}
+          skipAnimation={skipWelcomeAnim}
+        />
+        {incomingChallenge && (
+          <IncomingChallengeModal
+            challenge={incomingChallenge}
+            myHighScores={highScores}
+            mySolved={solved}
+            alreadySaved={hasChallenge(incomingChallenge.id)}
+            onAccept={handleAcceptChallenge}
+            onDismiss={handleDismissChallenge}
+          />
+        )}
+      </>
     );
   }
 

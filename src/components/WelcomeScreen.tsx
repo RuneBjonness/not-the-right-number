@@ -6,12 +6,14 @@ import { BrainIcon } from "./BrainIcon";
 interface WelcomeScreenProps {
   onStart: (difficulty: Difficulty) => void;
   onStartTutorial: () => void;
+  onShowBrag: () => void;
   highScores: { easy: number; normal: number; hard: number };
   solved: { easy: boolean; normal: boolean; hard: boolean };
   lastScore?: number;
   lastDifficulty?: Difficulty;
   isNewHighScore?: boolean;
   lastIsWon?: boolean;
+  skipAnimation?: boolean;
 }
 
 const difficulties: Difficulty[] = ["easy", "normal", "hard"];
@@ -24,20 +26,23 @@ const filledBrains: Record<Difficulty, number> = {
 export function WelcomeScreen({
   onStart,
   onStartTutorial,
+  onShowBrag,
   highScores,
   solved,
   lastScore,
   lastDifficulty,
   isNewHighScore,
   lastIsWon,
+  skipAnimation,
 }: WelcomeScreenProps) {
   const title = "Not The Right Number";
   const isReturning = lastScore !== undefined;
+  const noAnim = isReturning || skipAnimation;
   const [displayedChars, setDisplayedChars] = useState(
-    isReturning ? title.length : 0,
+    noAnim ? title.length : 0,
   );
-  const [showContent, setShowContent] = useState(isReturning);
-  const [showButton, setShowButton] = useState(isReturning);
+  const [showContent, setShowContent] = useState(noAnim);
+  const [showButton, setShowButton] = useState(noAnim);
   const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty>(
     lastDifficulty ?? "easy",
   );
@@ -50,19 +55,19 @@ export function WelcomeScreen({
         setDisplayedChars((c) => c + 1);
       }, delay);
       return () => clearTimeout(timer);
-    } else if (!isReturning) {
+    } else if (!noAnim) {
       const timer = setTimeout(() => setShowContent(true), 300);
       return () => clearTimeout(timer);
     }
-  }, [displayedChars, title.length, isReturning]);
+  }, [displayedChars, title.length, noAnim]);
 
   // Show button after content appears (only on first visit)
   useEffect(() => {
-    if (showContent && !isReturning) {
+    if (showContent && !noAnim) {
       const timer = setTimeout(() => setShowButton(true), 400);
       return () => clearTimeout(timer);
     }
-  }, [showContent, isReturning]);
+  }, [showContent, noAnim]);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -213,14 +218,24 @@ export function WelcomeScreen({
           showButton ? "opacity-100" : "opacity-0"
         }`}
       >
-        <button
-          onClick={onStartTutorial}
-          className="chalk-text text-base underline opacity-50 hover:opacity-90 transition-opacity"
-          style={{ color: "var(--chalk-blue)" }}
-          tabIndex={showButton ? 0 : -1}
-        >
-          How to play
-        </button>
+        <div className="flex gap-4">
+          <button
+            onClick={onStartTutorial}
+            className="chalk-text text-base underline opacity-50 hover:opacity-90 transition-opacity"
+            style={{ color: "var(--chalk-blue)" }}
+            tabIndex={showButton ? 0 : -1}
+          >
+            How to play
+          </button>
+          <button
+            onClick={onShowBrag}
+            className="chalk-text text-base underline opacity-50 hover:opacity-90 transition-opacity"
+            style={{ color: "var(--chalk-yellow)" }}
+            tabIndex={showButton ? 0 : -1}
+          >
+            Brag &amp; Challenges
+          </button>
+        </div>
         <button
           onClick={() => onStart(selectedDifficulty)}
           className="chalk-button chalk-button-start text-2xl px-12 py-4"
