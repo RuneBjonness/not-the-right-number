@@ -17,10 +17,12 @@ interface SolvedState {
 interface HighScoreStore {
   highScores: HighScores;
   solved: SolvedState;
+  tutorialSeen: boolean;
   getHighScore: (difficulty: Difficulty) => number;
   checkAndUpdateHighScore: (score: number, difficulty: Difficulty) => boolean;
   markSolved: (difficulty: Difficulty) => void;
   isSolved: (difficulty: Difficulty) => boolean;
+  markTutorialSeen: () => void;
 }
 
 export const useHighScoreStore = create<HighScoreStore>()(
@@ -28,6 +30,7 @@ export const useHighScoreStore = create<HighScoreStore>()(
     (set, get) => ({
       highScores: { easy: 0, normal: 0, hard: 0 },
       solved: { easy: false, normal: false, hard: false },
+      tutorialSeen: false,
       getHighScore: (difficulty) => get().highScores[difficulty],
       checkAndUpdateHighScore: (score, difficulty) => {
         if (score > get().highScores[difficulty]) {
@@ -44,7 +47,19 @@ export const useHighScoreStore = create<HighScoreStore>()(
         });
       },
       isSolved: (difficulty) => get().solved[difficulty],
+      markTutorialSeen: () => set({ tutorialSeen: true }),
     }),
-    { name: 'not-the-right-number-highscores' }
+    {
+      name: 'not-the-right-number-highscores',
+      version: 1,
+      migrate: (persistedState: unknown, version: number) => {
+        const state = persistedState as Record<string, unknown>;
+        if (version === 0) {
+          // Existing users already have stored data — don't auto-show tutorial
+          state.tutorialSeen = true;
+        }
+        return state as unknown as HighScoreStore;
+      },
+    }
   )
 );

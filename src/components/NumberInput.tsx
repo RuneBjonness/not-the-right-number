@@ -64,13 +64,13 @@ export function NumberInput({ onSubmit, disabled = false, maxDigits = 6, lowTime
     ['7', '8', '9'],
     ['4', '5', '6'],
     ['1', '2', '3'],
-    ['C', '0', '='],
+    ['C', '0', 'OK'],
   ];
 
   const handleButtonClick = (btn: string) => {
     if (btn === 'C') {
       clear();
-    } else if (btn === '=') {
+    } else if (btn === 'OK') {
       submit();
     } else {
       appendDigit(btn);
@@ -79,7 +79,7 @@ export function NumberInput({ onSubmit, disabled = false, maxDigits = 6, lowTime
 
   const getButtonClass = (btn: string) => {
     if (btn === 'C') return 'calc-button calc-button-clear';
-    if (btn === '=') return `calc-button calc-button-submit${lowTime ? ' calc-button-submit-urgent' : ''}`;
+    if (btn === 'OK') return `calc-button calc-button-submit${lowTime ? ' calc-button-submit-urgent' : ''}`;
     return 'calc-button';
   };
 
@@ -103,7 +103,7 @@ export function NumberInput({ onSubmit, disabled = false, maxDigits = 6, lowTime
             type="button"
             className={getButtonClass(btn)}
             onClick={() => handleButtonClick(btn)}
-            disabled={disabled || (btn === '=' && !value)}
+            disabled={disabled || (btn === 'OK' && !value)}
           >
             {btn}
           </button>

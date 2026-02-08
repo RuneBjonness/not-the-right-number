@@ -59,9 +59,11 @@ function App() {
   const {
     highScores,
     solved,
+    tutorialSeen,
     getHighScore,
     checkAndUpdateHighScore,
     markSolved,
+    markTutorialSeen,
   } = useHighScoreStore();
   const {
     playerName,
@@ -220,9 +222,11 @@ function App() {
   }, []);
 
   const handleReturnFromTutorial = useCallback(() => {
+    markTutorialSeen();
     setShowTutorial(false);
+    setSkipWelcomeAnim(true);
     setShowWelcome(true);
-  }, []);
+  }, [markTutorialSeen]);
 
   const handleShowBrag = useCallback(() => {
     setShowWelcome(false);
@@ -239,13 +243,19 @@ function App() {
     (challenge: Challenge) => {
       addChallenge(challenge);
       setIncomingChallenge(null);
+      if (!tutorialSeen) {
+        handleStartTutorial();
+      }
     },
-    [addChallenge],
+    [addChallenge, tutorialSeen, handleStartTutorial],
   );
 
   const handleDismissChallenge = useCallback(() => {
     setIncomingChallenge(null);
-  }, []);
+    if (!tutorialSeen) {
+      handleStartTutorial();
+    }
+  }, [tutorialSeen, handleStartTutorial]);
 
   const handleSubmit = useCallback(
     (input: string) => {
@@ -343,6 +353,7 @@ function App() {
           isNewHighScore={isNewHighScore}
           lastIsWon={lastIsWon}
           skipAnimation={skipWelcomeAnim}
+          autoStartTutorial={!tutorialSeen && !incomingChallenge}
         />
         {incomingChallenge && (
           <IncomingChallengeModal

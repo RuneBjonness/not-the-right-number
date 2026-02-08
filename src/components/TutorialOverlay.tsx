@@ -4,6 +4,7 @@ import type { TutorialStep, HighlightTarget } from '../tutorial/tutorialSteps';
 interface TutorialOverlayProps {
   step: TutorialStep;
   onContinue: () => void;
+  onSkip: () => void;
 }
 
 function getTargetRect(highlight: HighlightTarget): DOMRect | null {
@@ -13,7 +14,7 @@ function getTargetRect(highlight: HighlightTarget): DOMRect | null {
   return el.getBoundingClientRect();
 }
 
-export function TutorialOverlay({ step, onContinue }: TutorialOverlayProps) {
+export function TutorialOverlay({ step, onContinue, onSkip }: TutorialOverlayProps) {
   const [rect, setRect] = useState<DOMRect | null>(() => getTargetRect(step.highlight));
   const [prevHighlight, setPrevHighlight] = useState(step.highlight);
 
@@ -90,7 +91,14 @@ export function TutorialOverlay({ step, onContinue }: TutorialOverlayProps) {
         <p className="chalk-text opacity-90 text-base leading-relaxed mb-3">
           {step.description}
         </p>
-        {step.type !== 'action-required' && (
+        <div className="flex items-center justify-between">
+          <button
+            onClick={onSkip}
+            className="chalk-text text-sm opacity-40 hover:opacity-70 transition-opacity"
+            style={{ color: 'var(--chalk-white)' }}
+          >
+            Skip tutorial
+          </button>
           <button
             onClick={onContinue}
             className="chalk-text text-base font-bold underline opacity-80 hover:opacity-100 transition-opacity"
@@ -98,7 +106,7 @@ export function TutorialOverlay({ step, onContinue }: TutorialOverlayProps) {
           >
             Continue
           </button>
-        )}
+        </div>
       </div>
     </div>
   );

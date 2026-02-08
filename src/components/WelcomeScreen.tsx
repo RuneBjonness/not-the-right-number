@@ -15,7 +15,35 @@ interface WelcomeScreenProps {
   isNewHighScore?: boolean;
   lastIsWon?: boolean;
   skipAnimation?: boolean;
+  autoStartTutorial?: boolean;
 }
+
+function pickRandom<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+const welcomeSubtitles = [
+  "I\u2019m thinking of a number. You won\u2019t get it.",
+  "Go ahead, pick a number. Any number. It\u2019s wrong.",
+  "I\u2019ve never lost this game. Just saying.",
+  "Think you\u2019re good with numbers? Prove it.",
+  "The odds are not in your favor. They never are.",
+  "Pick a number. I\u2019ll wait.",
+];
+
+const returnWinMessages = [
+  "You got lucky.",
+  "Beginner\u2019s luck. Surely.",
+  "Don\u2019t let it go to your head.",
+  "Fine. You win this round.",
+];
+
+const returnLossMessages = [
+  "Back for more?",
+  "Told you so.",
+  "Ready to lose again?",
+  "I expected more, honestly.",
+];
 
 const difficulties: Difficulty[] = ["easy", "normal", "hard"];
 const filledBrains: Record<Difficulty, number> = {
@@ -35,6 +63,7 @@ export function WelcomeScreen({
   isNewHighScore,
   lastIsWon,
   skipAnimation,
+  autoStartTutorial,
 }: WelcomeScreenProps) {
   const title = "Not The Right Number";
   const isReturning = lastScore !== undefined;
@@ -46,6 +75,10 @@ export function WelcomeScreen({
   const [showButton, setShowButton] = useState(noAnim);
   const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty>(
     lastDifficulty ?? "easy",
+  );
+  const [subtitle] = useState(() => pickRandom(welcomeSubtitles));
+  const [returnMessage] = useState(() =>
+    lastIsWon ? pickRandom(returnWinMessages) : pickRandom(returnLossMessages),
   );
 
   // Animate title character by character (only on first visit)
@@ -69,6 +102,14 @@ export function WelcomeScreen({
       return () => clearTimeout(timer);
     }
   }, [showContent, noAnim]);
+
+  // Auto-start tutorial for first-time visitors after title animation
+  useEffect(() => {
+    if (autoStartTutorial && displayedChars >= title.length && !noAnim) {
+      const timer = setTimeout(() => onStartTutorial(), 800);
+      return () => clearTimeout(timer);
+    }
+  }, [autoStartTutorial, displayedChars, title.length, noAnim, onStartTutorial]);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -120,7 +161,7 @@ export function WelcomeScreen({
               color: lastIsWon ? "var(--chalk-green)" : "var(--chalk-yellow)",
             }}
           >
-            {lastIsWon ? "That's the right number!" : "Game Over!"}
+            {returnMessage}
           </p>
           <p className="text-xl md:text-2xl chalk-text opacity-80 mt-2">
             Score: {lastScore}
@@ -144,7 +185,7 @@ export function WelcomeScreen({
           }`}
         >
           <p className="text-base md:text-lg chalk-text opacity-80 leading-relaxed">
-            I'm thinking of a number. You'll never guess it though
+            {subtitle}
           </p>
         </div>
       )}

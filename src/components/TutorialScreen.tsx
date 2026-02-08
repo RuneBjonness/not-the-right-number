@@ -38,16 +38,7 @@ export function TutorialScreen({ onReturn }: TutorialScreenProps) {
       onReturn();
       return;
     }
-
-    const nextStep = tutorialSteps[nextIndex];
-
-    if (nextStep.type === 'action-required') {
-      // Show the action-required overlay first, then enable input on next continue
-      setStepIndex(nextIndex);
-      setInputEnabled(true);
-    } else {
-      setStepIndex(nextIndex);
-    }
+    setStepIndex(nextIndex);
   }, [stepIndex, onReturn]);
 
   const handleSubmit = useCallback(
@@ -76,7 +67,10 @@ export function TutorialScreen({ onReturn }: TutorialScreenProps) {
   );
 
   const handleOverlayContinue = useCallback(() => {
-    if (postActionQueue > 1) {
+    if (currentStep?.type === 'action-required' && !inputEnabled) {
+      // Show overlay first, then enable input on Continue
+      setInputEnabled(true);
+    } else if (postActionQueue > 1) {
       setPostActionQueue((q) => q - 1);
       setStepIndex((i) => i + 1);
     } else if (postActionQueue === 1) {
@@ -85,7 +79,7 @@ export function TutorialScreen({ onReturn }: TutorialScreenProps) {
     } else {
       handleContinue();
     }
-  }, [postActionQueue, handleContinue]);
+  }, [postActionQueue, handleContinue, currentStep, inputEnabled]);
 
   return (
     <div className="flex flex-col h-[100dvh]">
@@ -141,6 +135,7 @@ export function TutorialScreen({ onReturn }: TutorialScreenProps) {
         <TutorialOverlay
           step={currentStep}
           onContinue={handleOverlayContinue}
+          onSkip={onReturn}
         />
       )}
     </div>

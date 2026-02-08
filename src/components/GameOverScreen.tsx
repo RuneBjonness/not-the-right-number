@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface GameOverScreenProps {
   score: number;
@@ -23,6 +23,28 @@ function getGridConfig(count: number) {
   if (count <= 100) return { cols: 4, textSize: "text-lg", scrolls: true };
   return { cols: 5, textSize: "text-base", scrolls: true };
 }
+
+function pickRandom<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+const winHeadlines = [
+  "Fine. You got it.",
+  "I\u2019ll admit it \u2014 that was impressive. Barely.",
+  "You actually did it. I need a moment.",
+  "Against all odds \u2014 and I set the odds \u2014 you got it.",
+  "Well played. I hate to say it, but well played.",
+  "Okay, okay. You win this round.",
+];
+
+const lossHeadlines = [
+  "Told you so.",
+  "That was never going to work.",
+  "Not even close. Well\u2026 no, not even close.",
+  "Better luck next time. Or not.",
+  "The numbers have spoken. Against you.",
+  "I expected more, honestly.",
+];
 
 const AUTO_SCROLL_PX_PER_SEC = 50;
 const RESUME_DELAY_MS = 2000;
@@ -127,6 +149,9 @@ export function GameOverScreen({
   validCount,
   onContinue,
 }: GameOverScreenProps) {
+  const [headline] = useState(() =>
+    isWon ? pickRandom(winHeadlines) : pickRandom(lossHeadlines),
+  );
   const count = validCount;
   const displayCount = validNumbers.length;
   const isTruncated = displayCount < count;
@@ -143,7 +168,7 @@ export function GameOverScreen({
             color: isWon ? "var(--chalk-green)" : "var(--chalk-yellow)",
           }}
         >
-          {isWon ? "That's the right number!" : "That's NOT the right number!"}
+          {headline}
         </h1>
         <p className="text-2xl md:text-3xl chalk-text">Score: {score}</p>
         {isWon && (
