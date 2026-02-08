@@ -11,6 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Framework:** React with TypeScript
 - **Build Tool:** Vite
 - **Styling:** Tailwind CSS
+- **Audio:** Tone.js (lazy-loaded for background music)
 - **Persistence:** Local storage (high scores, progress)
 
 ## Common Commands
@@ -61,7 +62,18 @@ Each difficulty excludes rules that don't make sense for its range.
 
 ### Test System (`src/engine/tests.ts`)
 
-~47 rules in three tiers (EARLY → MID at 5 rules → LATE at 10 rules). The fairness engine (`src/engine/gameEngine.ts`, `src/engine/ruleCompatibility.ts`) ensures every new rule leaves valid answers by scanning the number range, rejecting incompatible rule pairs, and preferring rules that keep the game playable.
+~51 rules in three tiers (EARLY → MID at 5 rules → LATE at 10 rules). The fairness engine (`src/engine/gameEngine.ts`, `src/engine/ruleCompatibility.ts`) ensures every new rule leaves valid answers by scanning the number range, rejecting incompatible rule pairs, and preferring rules that keep the game playable.
+
+### Sound & Music (`src/engine/sounds.ts`, `src/engine/music.ts`)
+
+- **Sound effects** use the Web Audio API directly — 14 sound types covering input feedback, game events, countdown, and time warnings
+- **Background music** uses Tone.js with dynamic intensity based on game progress and urgency — adaptive tempo (80–140 BPM), layered arpeggios, and custom success/failure endings
+- Both systems have independent toggles persisted via `src/stores/soundStore.ts`
+- Tone.js is lazy-loaded (`await import("tone")`) to avoid AudioContext on page load; `Tone.start()` must be called from a user click handler
+
+### Urgency System (`src/engine/urgency.ts`)
+
+Four levels based on remaining time: normal (>15s), warning (≤15s), danger (≤10s), critical (≤5s). Drives timer color changes, pulse animations, sound triggers, and music intensity.
 
 ### Key Source Files
 
@@ -73,6 +85,9 @@ Each difficulty excludes rules that don't make sense for its range.
 - `src/engine/scoring.ts` — Point calculations
 - `src/engine/types.ts` — Core TypeScript types
 - `src/engine/bragCodec.ts` — Encode/decode challenge URLs
+- `src/engine/sounds.ts` — Sound effects via Web Audio API
+- `src/engine/music.ts` — Dynamic background music via Tone.js
+- `src/engine/urgency.ts` — Urgency level calculation from countdown timer
 
 **Components:**
 - `src/App.tsx` — Screen routing and state orchestration
@@ -84,13 +99,16 @@ Each difficulty excludes rules that don't make sense for its range.
 - `src/components/BragScreen.tsx` — Share scores, manage challenges
 - `src/components/IncomingChallengeModal.tsx` — Compare scores from a challenge URL
 - `src/components/TutorialOverlay.tsx` — Step-by-step tutorial overlay
-- `src/components/Countdown.tsx` — 3-2-1 animated countdown
+- `src/components/Countdown.tsx` — 3-2-1 animated countdown with sound
+- `src/components/SoundToggle.tsx` — Toggle buttons for sound effects and music
 
 **State:**
 - `src/hooks/useGameState.ts` — Game state management
 - `src/hooks/useScoreTimer.ts` — Time-based scoring hook
+- `src/hooks/useBackgroundMusic.ts` — Background music lifecycle and intensity management
 - `src/stores/highScoreStore.ts` — Per-difficulty high scores and solved status (Zustand + localStorage)
 - `src/stores/bragStore.ts` — Player name and saved challenges (Zustand + localStorage)
+- `src/stores/soundStore.ts` — Sound/music enabled state (Zustand + localStorage)
 - `src/tutorial/tutorialSteps.ts` — Tutorial step definitions
 
 ## Visual Theme

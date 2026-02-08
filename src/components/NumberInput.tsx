@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { playSound } from '../engine/sounds';
 
 interface NumberInputProps {
   onSubmit: (value: string) => void;
@@ -14,6 +15,7 @@ export function NumberInput({ onSubmit, disabled = false, maxDigits = 6, lowTime
   const appendDigit = useCallback(
     (digit: string) => {
       if (disabled) return;
+      playSound('keyPress');
       setValue((prev) => (prev.length < maxDigits ? prev + digit : prev));
     },
     [disabled, maxDigits]
@@ -21,11 +23,13 @@ export function NumberInput({ onSubmit, disabled = false, maxDigits = 6, lowTime
 
   const clear = useCallback(() => {
     if (disabled) return;
+    playSound('clear');
     setValue('');
   }, [disabled]);
 
   const backspace = useCallback(() => {
     if (disabled) return;
+    playSound('backspace');
     setValue((prev) => prev.slice(0, -1));
   }, [disabled]);
 

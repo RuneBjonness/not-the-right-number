@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { playSound } from '../engine/sounds';
 
 interface CountdownProps {
   onComplete: () => void;
@@ -6,15 +7,21 @@ interface CountdownProps {
 
 export function Countdown({ onComplete }: CountdownProps) {
   const [count, setCount] = useState(3);
+  const onCompleteRef = useRef(onComplete);
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
 
   useEffect(() => {
     if (count === 0) {
-      onComplete();
+      playSound('countdownGo');
+      onCompleteRef.current();
       return;
     }
+    playSound('countdownTick');
     const timer = setTimeout(() => setCount(count - 1), 1000);
     return () => clearTimeout(timer);
-  }, [count, onComplete]);
+  }, [count]);
 
   if (count === 0) return null;
 

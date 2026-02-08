@@ -1,3 +1,8 @@
+import { useEffect, useRef } from 'react';
+import { playSound } from '../engine/sounds';
+import { getUrgencyLevel } from '../engine/urgency';
+import type { UrgencyLevel } from '../engine/urgency';
+
 interface ScoreDisplayProps {
   highScore: number;
   totalScore: number;
@@ -8,15 +13,6 @@ interface ScoreDisplayProps {
 
 function formatCount(n: number): string {
   return n.toLocaleString();
-}
-
-type UrgencyLevel = 'normal' | 'warning' | 'danger' | 'critical';
-
-function getUrgencyLevel(seconds: number): UrgencyLevel {
-  if (seconds <= 5) return 'critical';
-  if (seconds <= 10) return 'danger';
-  if (seconds <= 15) return 'warning';
-  return 'normal';
 }
 
 const urgencyStyles: Record<UrgencyLevel, { color: string; className: string }> = {
@@ -35,6 +31,15 @@ export function ScoreDisplay({
 }: ScoreDisplayProps) {
   const urgency = getUrgencyLevel(secondsLeft);
   const { color, className } = urgencyStyles[urgency];
+  const prevUrgencyRef = useRef<UrgencyLevel>(urgency);
+
+  useEffect(() => {
+    const prev = prevUrgencyRef.current;
+    prevUrgencyRef.current = urgency;
+    if (prev === urgency) return;
+    if (urgency === 'danger') playSound('lowTimeWarning');
+    if (urgency === 'critical') playSound('lowTimeCritical');
+  }, [urgency]);
 
   return (
     <div className="flex flex-col items-center w-full" data-tutorial="score">

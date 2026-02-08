@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { NumberInput } from "./components/NumberInput";
 import { TestList } from "./components/TestList";
 import { ScoreDisplay } from "./components/ScoreDisplay";
@@ -8,8 +8,13 @@ import { TutorialScreen } from "./components/TutorialScreen";
 import { BragScreen } from "./components/BragScreen";
 import { IncomingChallengeModal } from "./components/IncomingChallengeModal";
 import { Countdown } from "./components/Countdown";
+import { SoundToggle } from "./components/SoundToggle";
+import { playSound } from "./engine/sounds";
+import { initMusic } from "./engine/music";
 import { useGameState } from "./hooks/useGameState";
 import { useScoreTimer } from "./hooks/useScoreTimer";
+import { useBackgroundMusic } from "./hooks/useBackgroundMusic";
+import type { GamePhase } from "./hooks/useBackgroundMusic";
 import { useHighScoreStore } from "./stores/highScoreStore";
 import { useBragStore } from "./stores/bragStore";
 import { decodeBrag } from "./engine/bragCodec";
@@ -17,6 +22,8 @@ import type { Challenge } from "./engine/bragCodec";
 import { collectValidNumbers } from "./engine/ruleCompatibility";
 import type { Difficulty } from "./engine/difficulty";
 import { getDifficultyConfig } from "./engine/difficulty";
+import { getUrgencyLevel } from "./engine/urgency";
+import { calculateLevelStartingPoints } from "./engine/scoring";
 import type { Test } from "./engine/types";
 
 function App() {
@@ -136,6 +143,7 @@ function App() {
   }, [gameOverData]);
 
   const handleTimeOut = useCallback(() => {
+    playSound('timeExpired');
     triggerGameOver();
     handleGameEnd(
       totalScoreRef.current,
@@ -163,8 +171,34 @@ function App() {
     resetForNewLevel,
   } = useScoreTimer(handleTimeOut);
 
+  // Compute game phase for background music
+  const gamePhase: GamePhase = useMemo(() => {
+    if (showWelcome || showTutorial || showBrag) return "welcome";
+    if (showCountdown) return "countdown";
+    if (showGameOver && gameOverData?.isWon) return "won";
+    if (showGameOver) return "gameOver";
+    if (gameState.isGameOver && gameState.isWon) return "won";
+    if (gameState.isGameOver) return "gameOver";
+    return "playing";
+  }, [showWelcome, showTutorial, showBrag, showCountdown, showGameOver, gameOverData, gameState.isGameOver, gameState.isWon]);
+
+  const maxPoints = calculateLevelStartingPoints(gameState.level);
+  const urgency = getUrgencyLevel(gameState.isGameOver ? 0 : potentialPoints);
+  const currentDiffConfig = getDifficultyConfig(gameState.difficulty);
+
+  useBackgroundMusic({
+    phase: gamePhase,
+    level: gameState.level,
+    winThreshold: currentDiffConfig.winThreshold,
+    potentialPoints,
+    maxPoints,
+    urgency,
+  });
+
   const handleStartGame = useCallback(
     (difficulty: Difficulty) => {
+      // initMusic must be called from a user click to satisfy autoplay policy
+      initMusic();
       gameEndedRef.current = false;
       totalScoreRef.current = 0;
       resetGame(difficulty);
@@ -215,6 +249,7 @@ function App() {
 
   const handleSubmit = useCallback(
     (input: string) => {
+      playSound('submit');
       const result = submitInput(input);
       const config = getDifficultyConfig(gameState.difficulty);
 
@@ -224,8 +259,10 @@ function App() {
         const newTotal = totalScoreRef.current + earned;
         totalScoreRef.current = newTotal;
         setTotalScore(newTotal);
+        playSound('correct');
         resetForNewLevel(result.newLevel);
       } else if (result.type === "failed" || result.type === "invalid") {
+        playSound('wrong');
         applyPenalty();
       } else if (result.type === "won") {
         const earned = Math.round(potentialPoints * config.scoreMultiplier);
@@ -327,7 +364,8 @@ function App() {
     : Math.round(potentialPoints * config.scoreMultiplier);
 
   return (
-    <div className="flex flex-col h-[100dvh]">
+    <div className="relative flex flex-col h-[100dvh]">
+      <SoundToggle />
       {showCountdown && <Countdown onComplete={handleCountdownComplete} />}
 
       {/* Middle: Scrollable rules list */}

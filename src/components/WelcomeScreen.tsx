@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import type { Difficulty } from "../engine/difficulty";
 import { getDifficultyConfig } from "../engine/difficulty";
 import { BrainIcon } from "./BrainIcon";
+import { SoundToggle } from "./SoundToggle";
 
 interface WelcomeScreenProps {
   onStart: (difficulty: Difficulty) => void;
@@ -84,7 +85,8 @@ export function WelcomeScreen({
   }, [handleKeyDown]);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4">
+    <div className="relative min-h-screen flex flex-col items-center justify-center px-4">
+      <SoundToggle />
       {/* Title */}
       <div className="relative inline-block mb-8">
         <h1 className="text-4xl md:text-6xl font-bold chalk-text-strong chalk-glow text-center min-h-[1.2em]">
